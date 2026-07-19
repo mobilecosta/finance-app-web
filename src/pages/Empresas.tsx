@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Loader, AlertCircle, CheckCircle, Plus, Trash2, Edit2, Search, FileText } from 'lucide-react';
-import { empresaAPI, type Empresa, type EmpresaConfigNfse } from '../services/nfse-api';
+import { empresaAPI, extractError, type Empresa, type EmpresaConfigNfse } from '../services/nfse-api';
 
 type Tab = 'lista' | 'cadastrar' | 'config';
 
@@ -89,7 +89,7 @@ export default function Empresas() {
       const res = await empresaAPI.listar(filterCnpj ? { cpf_cnpj: filterCnpj } : undefined);
       setEmpresas(res.data ?? []);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro ao listar empresas');
+      setError(extractError(e));
     } finally { setLoading(false); }
   }
 
@@ -113,7 +113,7 @@ export default function Empresas() {
       setActiveTab('lista');
       loadEmpresas();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro ao salvar empresa');
+      setError(extractError(e));
     } finally { setLoading(false); }
   }
 
@@ -125,7 +125,7 @@ export default function Empresas() {
       setSuccess('Empresa deletada');
       loadEmpresas();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro ao deletar');
+      setError(extractError(e));
     } finally { setLoading(false); }
   }
 
@@ -142,7 +142,7 @@ export default function Empresas() {
       setConfig(res);
       setActiveTab('config');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro ao carregar configuração');
+      setError(extractError(e));
     } finally { setLoading(false); }
   }
 
@@ -153,7 +153,7 @@ export default function Empresas() {
       await empresaAPI.alterarConfigNfse(configCnpj, config);
       setSuccess('Configuração NFS-e salva');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro ao salvar configuração');
+      setError(extractError(e));
     } finally { setLoading(false); }
   }
 

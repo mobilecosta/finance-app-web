@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Loader, AlertCircle, CheckCircle } from 'lucide-react';
-import { nfseAPI, type NfseCredentials, type NfseListagemItem, type NfseDetalhe } from '../services/nfse-api';
+import { nfseAPI, extractError, type NfseCredentials, type NfseListagemItem, type NfseDetalhe } from '../services/nfse-api';
 
 type Tab = 'credenciais' | 'listar' | 'consultar' | 'emitir' | 'cancelar';
 
@@ -117,7 +117,7 @@ export default function Nfse() {
       setListResult(res.data ?? []);
       setViewState('success');
     } catch (e) {
-      setErrorMsg(e instanceof Error ? e.message : 'Erro ao listar');
+      setErrorMsg(extractError(e));
       setViewState('error');
     }
   }
@@ -131,7 +131,7 @@ export default function Nfse() {
       setConsultResult(res);
       setViewState('success');
     } catch (e) {
-      setErrorMsg(e instanceof Error ? e.message : 'Erro ao consultar');
+      setErrorMsg(extractError(e));
       setViewState('error');
     }
   }
@@ -157,7 +157,7 @@ export default function Nfse() {
       setSuccessMsg(`NFS-e emitida! Nº ${res.numero} (${res.status})`);
       setViewState('success');
     } catch (e) {
-      setErrorMsg(e instanceof Error ? e.message : 'Erro ao emitir');
+      setErrorMsg(extractError(e));
       setViewState('error');
     }
   }
@@ -172,7 +172,7 @@ export default function Nfse() {
       setSuccessMsg(`Cancelamento solicitado: ${res.status}`);
       setViewState('success');
     } catch (e) {
-      setErrorMsg(e instanceof Error ? e.message : 'Erro ao cancelar');
+      setErrorMsg(extractError(e));
       setViewState('error');
     }
   }

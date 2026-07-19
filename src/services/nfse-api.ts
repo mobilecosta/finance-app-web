@@ -1,4 +1,16 @@
-import api from './api';
+import axios from 'axios';
+
+const acbrHttp = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'https://finance-backend-liard.vercel.app/api',
+  headers: { 'Content-Type': 'application/json' },
+});
+
+export function extractError(e: unknown): string {
+  if (axios.isAxiosError(e) && e.response?.data?.message) {
+    return e.response.data.message;
+  }
+  return e instanceof Error ? e.message : 'Erro desconhecido';
+}
 
 export interface NfseCredentials {
   clientId: string;
@@ -65,7 +77,7 @@ async function getAccessToken(): Promise<string> {
     return cachedToken.token;
   }
 
-  const res = await api.post('/acbr/auth', {
+  const res = await acbrHttp.post('/acbr/auth', {
     client_id: creds.clientId,
     client_secret: creds.clientSecret,
   });
@@ -78,7 +90,7 @@ async function request<T>(path: string, options?: { method?: string; body?: unkn
   const token = await getAccessToken();
   const ambiente = options?.environment === 'producao' ? 'producao' : 'homologacao';
   const params = { ...options?.query, ambiente };
-  const res = await api.request<T>({
+  const res = await acbrHttp.request<T>({
     method: options?.method ?? 'GET',
     url: `/acbr${path}`,
     params,
