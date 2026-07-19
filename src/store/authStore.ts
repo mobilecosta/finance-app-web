@@ -20,6 +20,7 @@ interface AuthState {
   signout: () => Promise<void>;
   loadUser: () => Promise<void>;
   clearError: () => void;
+  setToken: (token: string) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -88,4 +89,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   clearError: () => set({ error: null }),
+
+  setToken: (token: string) => {
+    localStorage.setItem('authToken', token);
+    set({ token });
+  },
 }));

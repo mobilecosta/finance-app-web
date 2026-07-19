@@ -4,6 +4,7 @@ import { useAuthStore } from './store/authStore';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
+import AuthCallback from './pages/AuthCallback';
 import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Accounts from './pages/Accounts';
@@ -19,6 +20,8 @@ function AppRoutes() {
         path="/login" 
         element={token ? <Navigate to="/dashboard" replace /> : <Login />} 
       />
+
+      <Route path="/auth/callback" element={<AuthCallback />} />
       
       <Route
         path="/dashboard"
