@@ -11,6 +11,8 @@ import {
   Wallet,
   Tag,
   TrendingUp,
+  FileText,
+  Building2,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -28,6 +30,8 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/transactions', label: 'Transações', icon: TrendingUp },
     { path: '/accounts', label: 'Contas', icon: CreditCard },
     { path: '/categories', label: 'Categorias', icon: Tag },
+    { path: '/empresas', label: 'Empresas', icon: Building2 },
+    { path: '/nfse', label: 'NFS-e', icon: FileText },
     { path: '/settings', label: 'Configurações', icon: Settings },
   ];
 

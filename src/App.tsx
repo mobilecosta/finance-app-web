@@ -9,6 +9,8 @@ import Dashboard from './pages/Dashboard';
 import Transactions from './pages/Transactions';
 import Accounts from './pages/Accounts';
 import Categories from './pages/Categories';
+import Empresas from './pages/Empresas';
+import Nfse from './pages/Nfse';
 import Settings from './pages/Settings';
 
 function AppRoutes() {
@@ -67,6 +69,26 @@ function AppRoutes() {
         }
       />
       
+      <Route
+        path="/empresas"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Empresas />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/nfse"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Nfse />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/settings"
         element={
