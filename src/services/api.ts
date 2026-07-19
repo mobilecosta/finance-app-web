@@ -64,19 +64,19 @@ export interface Account {
 
 export const accountsAPI = {
   list: () =>
-    api.get<Account[]>('/accounts'),
+    api.get<Account[]>('/finance/accounts'),
   
   get: (id: number) =>
-    api.get<Account>(`/accounts/${id}`),
+    api.get<Account>(`/finance/accounts/${id}`),
   
   create: (data: Partial<Account>) =>
-    api.post<Account>('/accounts', data),
+    api.post<Account>('/finance/accounts', data),
   
   update: (id: number, data: Partial<Account>) =>
-    api.put<Account>(`/accounts/${id}`, data),
+    api.put<Account>(`/finance/accounts/${id}`, data),
   
   delete: (id: number) =>
-    api.delete(`/accounts/${id}`),
+    api.delete(`/finance/accounts/${id}`),
 };
 
 // ============ CATEGORIAS ============
@@ -95,19 +95,19 @@ export interface Category {
 
 export const categoriesAPI = {
   list: () =>
-    api.get<Category[]>('/categories'),
+    api.get<Category[]>('/finance/categories'),
   
   get: (id: number) =>
-    api.get<Category>(`/categories/${id}`),
+    api.get<Category>(`/finance/categories/${id}`),
   
   create: (data: Partial<Category>) =>
-    api.post<Category>('/categories', data),
+    api.post<Category>('/finance/categories', data),
   
   update: (id: number, data: Partial<Category>) =>
-    api.put<Category>(`/categories/${id}`, data),
+    api.put<Category>(`/finance/categories/${id}`, data),
   
   delete: (id: number) =>
-    api.delete(`/categories/${id}`),
+    api.delete(`/finance/categories/${id}`),
 };
 
 // ============ TRANSAÇÕES ============
@@ -138,19 +138,19 @@ export interface TransactionFilters {
 
 export const transactionsAPI = {
   list: (filters?: TransactionFilters) =>
-    api.get<Transaction[]>('/transactions', { params: filters }),
+    api.get<Transaction[]>('/finance/transactions', { params: filters }),
   
   get: (id: number) =>
-    api.get<Transaction>(`/transactions/${id}`),
+    api.get<Transaction>(`/finance/transactions/${id}`),
   
   create: (data: Partial<Transaction>) =>
-    api.post<Transaction>('/transactions', data),
+    api.post<Transaction>('/finance/transactions', data),
   
   update: (id: number, data: Partial<Transaction>) =>
-    api.put<Transaction>(`/transactions/${id}`, data),
+    api.put<Transaction>(`/finance/transactions/${id}`, data),
   
   delete: (id: number) =>
-    api.delete(`/transactions/${id}`),
+    api.delete(`/finance/transactions/${id}`),
 };
 
 // ============ DASHBOARD ============
@@ -175,13 +175,13 @@ export interface DashboardMetrics {
 
 export const dashboardAPI = {
   getMetrics: (period?: 'month' | 'quarter' | 'year') =>
-    api.get<DashboardMetrics>('/dashboard/metrics', { params: { period } }),
+    api.get<DashboardMetrics>('/finance/dashboard/metrics', { params: { period } }),
   
   getMonthlyData: () =>
-    api.get('/dashboard/monthly'),
+    api.get('/finance/dashboard/monthly'),
   
   getCategoryDistribution: () =>
-    api.get('/dashboard/categories'),
+    api.get('/finance/dashboard/categories'),
 };
 
 export default api;
