@@ -109,6 +109,11 @@ O frontend consome a API do **Finance Backend** (`finance-backend-mobile.vercel.
 | PUT | `/api/finance/categories/:id` | Atualizar categoria |
 | DELETE | `/api/finance/categories/:id` | Remover categoria |
 
+## Uso do ACBR:
+https://acbr.api.br/
+
+https://dev.acbr.api.br/docs/
+
 ## Build & Deploy
 
 ```bash
