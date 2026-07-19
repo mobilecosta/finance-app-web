@@ -72,6 +72,15 @@ export default function Nfse() {
     if (saved) {
       setCreds(saved);
       setCredsSaved(true);
+    } else {
+      const envClientId = import.meta.env.VITE_ACBR_CLIENT_ID;
+      const envClientSecret = import.meta.env.VITE_ACBR_CLIENT_SECRET;
+      if (envClientId && envClientSecret) {
+        const envCreds = { clientId: envClientId, clientSecret: envClientSecret };
+        nfseAPI.saveCredentials(envCreds);
+        setCreds(envCreds);
+        setCredsSaved(true);
+      }
     }
   }, []);
 
