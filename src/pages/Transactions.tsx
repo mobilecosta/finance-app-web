@@ -48,10 +48,13 @@ export default function Transactions() {
     try {
       if (editingId) {
         await transactionsAPI.update(editingId, {
+          type: formData.type,
           amount: parseFloat(formData.amount),
           description: formData.description,
           date: formData.date,
           status: formData.status,
+          categoryId: parseInt(formData.categoryId),
+          accountId: parseInt(formData.accountId),
         });
       } else {
         await transactionsAPI.create({
