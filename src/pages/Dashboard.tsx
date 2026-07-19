@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { dashboardAPI, DashboardMetrics } from '../services/api';
-import { TrendingUp, TrendingDown, Wallet, ArrowUpRight, ArrowDownLeft, Loader } from 'lucide-react';
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { dashboardAPI, type DashboardMetrics } from '../services/api';
+import { TrendingUp, Wallet, ArrowUpRight, ArrowDownLeft, Loader } from 'lucide-react';
 
 export default function Dashboard() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
@@ -150,7 +150,7 @@ export default function Dashboard() {
                 cx="50%"
                 cy="50%"
                 labelLine={false}
-                label={({ name, percentage }) => `${name}: ${percentage}%`}
+                label={({ name, payload }: any) => `${name}: ${payload.percentage}%`}
                 outerRadius={80}
                 fill="#8884d8"
                 dataKey="amount"

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { transactionsAPI, Transaction, Category, Account, accountsAPI, categoriesAPI } from '../services/api';
+import { transactionsAPI, type Transaction, type Category, type Account, accountsAPI, categoriesAPI } from '../services/api';
 import { Plus, Trash2, Edit2, Loader, AlertCircle } from 'lucide-react';
 
 export default function Transactions() {

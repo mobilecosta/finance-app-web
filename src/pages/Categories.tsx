@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { categoriesAPI, Category } from '../services/api';
+import { categoriesAPI, type Category } from '../services/api';
 import { Plus, Trash2, Edit2, Loader, AlertCircle } from 'lucide-react';
 
 export default function Categories() {

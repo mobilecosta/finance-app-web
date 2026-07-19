@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { accountsAPI, Account } from '../services/api';
+import { accountsAPI, type Account } from '../services/api';
 import { Plus, Trash2, Edit2, Loader, AlertCircle } from 'lucide-react';
 
 export default function Accounts() {

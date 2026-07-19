@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 * {
   margin: 0;
@@ -38,6 +36,11 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #64748b;
+}
+
+@theme {
+  --color-primary: #3b82f6;
+  --color-secondary: #475569;
 }
 
 @layer components {
