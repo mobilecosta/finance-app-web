@@ -36,7 +36,14 @@ export default function Nfse() {
   const [successMsg, setSuccessMsg] = useState('');
 
   // Credentials
-  const [creds, setCreds] = useState<NfseCredentials>({ clientId: '', clientSecret: '' });
+  const [creds, setCreds] = useState<NfseCredentials>(() => {
+    const saved = nfseAPI.getCredentials();
+    if (saved) return saved;
+    return {
+      clientId: import.meta.env.VITE_ACBR_CLIENT_ID || '',
+      clientSecret: import.meta.env.VITE_ACBR_CLIENT_SECRET || '',
+    };
+  });
   const [credsSaved, setCredsSaved] = useState(false);
   const [ambiente, setAmbiente] = useState<'homologacao' | 'producao'>('homologacao');
 
