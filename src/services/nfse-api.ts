@@ -1,5 +1,3 @@
-import axios from 'axios';
-
 const ACBR_AUTH_URL = 'https://auth.acbr.api.br/realms/ACBrAPI/protocol/openid-connect/token';
 const ACBR_HOM_URL = 'https://hom.acbr.api.br';
 const ACBR_PROD_URL = 'https://prod.acbr.api.br';

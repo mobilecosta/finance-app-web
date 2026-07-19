@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader, AlertCircle, CheckCircle, FileText, X, Search, Plus, Trash2 } from 'lucide-react';
+import { Loader, AlertCircle, CheckCircle } from 'lucide-react';
 import { nfseAPI, type NfseCredentials, type NfseListagemItem, type NfseDetalhe } from '../services/nfse-api';
 
 type Tab = 'credenciais' | 'listar' | 'consultar' | 'emitir' | 'cancelar';

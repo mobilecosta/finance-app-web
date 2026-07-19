@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader, AlertCircle, CheckCircle, Plus, Trash2, Edit2, X, Search, FileText, Building2 } from 'lucide-react';
+import { Loader, AlertCircle, CheckCircle, Plus, Trash2, Edit2, Search, FileText } from 'lucide-react';
 import { empresaAPI, type Empresa, type EmpresaConfigNfse } from '../services/nfse-api';
 
 type Tab = 'lista' | 'cadastrar' | 'config';
@@ -81,8 +81,6 @@ export default function Empresas() {
 
   const [configCnpj, setConfigCnpj] = useState('');
   const [config, setConfig] = useState<EmpresaConfigNfse>(emptyConfigNfse);
-  const [configLoaded, setConfigLoaded] = useState(false);
-
   function clearMessages() { setError(''); setSuccess(''); }
 
   async function loadEmpresas() {
@@ -142,7 +140,6 @@ export default function Empresas() {
     try {
       const res = await empresaAPI.consultarConfigNfse(cpfCnpj);
       setConfig(res);
-      setConfigLoaded(true);
       setActiveTab('config');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro ao carregar configuração');
@@ -185,7 +182,7 @@ export default function Empresas() {
         {(['lista', 'cadastrar', 'config'] as Tab[]).map(tab => (
           <button
             key={tab}
-            onClick={() => { setActiveTab(tab); clearMessages(); if (tab !== 'config') setConfigLoaded(false); }}
+            onClick={() => { setActiveTab(tab); clearMessages(); }}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               activeTab === tab ? 'bg-blue-500 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
