@@ -165,6 +165,5 @@ MIT License
 
 **mobilecosta** — Desenvolvedor Full Stack
 
----
 
 **Desenvolvido com ❤️ usando React + TypeScript**
