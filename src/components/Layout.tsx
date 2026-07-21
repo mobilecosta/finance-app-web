@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'wouter';
 import { useAuthStore } from '../store/authStore';
 import {
   BarChart3,
@@ -20,8 +20,7 @@ interface LayoutProps {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const [location, setLocation] = useLocation();
   const { user, signout } = useAuthStore();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -37,7 +36,7 @@ export default function Layout({ children }: LayoutProps) {
 
   const handleLogout = async () => {
     await signout();
-    navigate('/login');
+    setLocation('/login');
   };
 
   return (
@@ -75,7 +74,7 @@ export default function Layout({ children }: LayoutProps) {
               key={path}
               to={path}
               className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-                location.pathname === path
+                location === path
                   ? 'bg-black text-white'
                   : 'text-zinc-600 hover:bg-zinc-100'
               }`}

@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { useAuthStore } from '../store/authStore';
 import { AlertCircle, Loader, Wallet } from 'lucide-react';
 
 export default function Login() {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const { signin, signup, loading, error, clearError } = useAuthStore();
   
   const [isSignup, setIsSignup] = useState(false);
@@ -34,7 +34,7 @@ export default function Login() {
       } else {
         await signin(email, password);
       }
-      navigate('/dashboard');
+      setLocation('/dashboard');
     } catch (err) {
       // Erro já está no store
     }
