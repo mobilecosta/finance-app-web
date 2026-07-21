@@ -1,30 +1,31 @@
 import { useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { useAuthStore } from '../store/authStore';
 
 export default function AuthCallback() {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
+  const [location, setLocation] = useLocation();
   const { setToken, loadUser } = useAuthStore();
 
   useEffect(() => {
-    const token = searchParams.get('token');
+    // Extrair token da URL
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
 
     if (token) {
       setToken(token);
       loadUser().finally(() => {
-        navigate('/dashboard', { replace: true });
+        setLocation('/dashboard');
       });
     } else {
-      navigate('/login', { replace: true });
+      setLocation('/login');
     }
-  }, [searchParams, navigate, setToken, loadUser]);
+  }, [setToken, loadUser, setLocation]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-[#0f172a]">
+    <div className="flex items-center justify-center min-h-screen bg-zinc-50">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4" />
-        <p className="text-gray-400">Autenticando...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black mx-auto mb-4" />
+        <p className="text-zinc-600">Autenticando...</p>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
+import { Route, Switch } from 'wouter';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from './store/authStore';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -15,93 +15,88 @@ import Settings from './pages/Settings';
 
 function AppRoutes() {
   const { token } = useAuthStore();
+  const [location, setLocation] = useState('/');
 
   return (
-    <Routes>
-      <Route 
-        path="/login" 
-        element={token ? <Navigate to="/dashboard" replace /> : <Login />} 
-      />
+    <Switch>
+      <Route path="/login">
+        {token ? (
+          <Dashboard />
+        ) : (
+          <Login />
+        )}
+      </Route>
 
-      <Route path="/auth/callback" element={<AuthCallback />} />
+      <Route path="/auth/callback" component={AuthCallback} />
       
-      <Route
-        path="/dashboard"
-        element={
+      <Route path="/dashboard">
+        <ProtectedRoute>
+          <Layout>
+            <Dashboard />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/transactions">
+        <ProtectedRoute>
+          <Layout>
+            <Transactions />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/accounts">
+        <ProtectedRoute>
+          <Layout>
+            <Accounts />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/categories">
+        <ProtectedRoute>
+          <Layout>
+            <Categories />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/empresas">
+        <ProtectedRoute>
+          <Layout>
+            <Empresas />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/nfse">
+        <ProtectedRoute>
+          <Layout>
+            <Nfse />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/settings">
+        <ProtectedRoute>
+          <Layout>
+            <Settings />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/">
+        {token ? (
           <ProtectedRoute>
             <Layout>
               <Dashboard />
             </Layout>
           </ProtectedRoute>
-        }
-      />
-      
-      <Route
-        path="/transactions"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Transactions />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      
-      <Route
-        path="/accounts"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Accounts />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      
-      <Route
-        path="/categories"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Categories />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      
-      <Route
-        path="/empresas"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Empresas />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/nfse"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Nfse />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/settings"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Settings />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-    </Routes>
+        ) : (
+          <Login />
+        )}
+      </Route>
+    </Switch>
   );
 }
 
@@ -114,9 +109,5 @@ export default function App() {
     }
   }, [token, loadUser]);
 
-  return (
-    <Router>
-      <AppRoutes />
-    </Router>
-  );
+  return <AppRoutes />;
 }

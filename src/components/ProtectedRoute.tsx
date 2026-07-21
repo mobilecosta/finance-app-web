@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { useAuthStore } from '../store/authStore';
 import { useEffect } from 'react';
 
@@ -8,6 +8,7 @@ interface ProtectedRouteProps {
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { token, user, loadUser } = useAuthStore();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     if (token && !user) {
@@ -16,7 +17,8 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }, [token, user, loadUser]);
 
   if (!token) {
-    return <Navigate to="/login" replace />;
+    setLocation('/login');
+    return null;
   }
 
   return <>{children}</>;

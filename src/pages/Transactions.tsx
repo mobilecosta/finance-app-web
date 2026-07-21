@@ -111,7 +111,7 @@ export default function Transactions() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader className="w-8 h-8 text-blue-500 animate-spin" />
+        <Loader className="w-8 h-8 text-black animate-spin" />
       </div>
     );
   }
@@ -121,8 +121,8 @@ export default function Transactions() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">Transações</h1>
-          <p className="text-slate-400">Gerencie suas transações financeiras</p>
+          <h1 className="text-3xl font-bold text-zinc-900 mb-2">Transações</h1>
+          <p className="text-zinc-500">Gerencie suas transações financeiras</p>
         </div>
         <button
           onClick={() => {
@@ -147,24 +147,24 @@ export default function Transactions() {
 
       {/* Error Message */}
       {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-lg flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-          <p className="text-red-400">{error}</p>
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <p className="text-red-600">{error}</p>
         </div>
       )}
 
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-800 border border-slate-700 rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-xl font-bold text-white mb-4">
+          <div className="bg-white border border-zinc-200 rounded-lg p-6 max-w-md w-full shadow-xl">
+            <h2 className="text-xl font-bold text-zinc-900 mb-4">
               {editingId ? 'Editar Transação' : 'Nova Transação'}
             </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Tipo</label>
+                  <label className="block text-sm font-medium text-zinc-700 mb-2">Tipo</label>
                   <select
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value as 'income' | 'expense' })}
@@ -176,7 +176,7 @@ export default function Transactions() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Valor</label>
+                  <label className="block text-sm font-medium text-zinc-700 mb-2">Valor</label>
                   <input
                     type="number"
                     step="0.01"
@@ -190,7 +190,7 @@ export default function Transactions() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Descrição</label>
+                <label className="block text-sm font-medium text-zinc-700 mb-2">Descrição</label>
                 <input
                   type="text"
                   value={formData.description}
@@ -202,7 +202,7 @@ export default function Transactions() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Data</label>
+                  <label className="block text-sm font-medium text-zinc-700 mb-2">Data</label>
                   <input
                     type="date"
                     value={formData.date}
@@ -213,7 +213,7 @@ export default function Transactions() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Status</label>
+                  <label className="block text-sm font-medium text-zinc-700 mb-2">Status</label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as 'completed' | 'pending' | 'cancelled' })}
@@ -228,7 +228,7 @@ export default function Transactions() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Categoria</label>
+                  <label className="block text-sm font-medium text-zinc-700 mb-2">Categoria</label>
                   <select
                     value={formData.categoryId}
                     onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
@@ -243,7 +243,7 @@ export default function Transactions() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Conta</label>
+                  <label className="block text-sm font-medium text-zinc-700 mb-2">Conta</label>
                   <select
                     value={formData.accountId}
                     onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
@@ -282,53 +282,51 @@ export default function Transactions() {
       <div className="card overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-slate-700">
-              <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">Descrição</th>
-              <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">Tipo</th>
-              <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">Categoria</th>
-              <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">Data</th>
-              <th className="text-left py-3 px-4 text-slate-400 font-medium text-sm">Status</th>
-              <th className="text-right py-3 px-4 text-slate-400 font-medium text-sm">Valor</th>
-              <th className="text-right py-3 px-4 text-slate-400 font-medium text-sm">Ações</th>
+            <tr className="border-b border-zinc-100">
+              <th className="text-left py-3 px-4 text-zinc-500 font-medium text-sm">Descrição</th>
+              <th className="text-left py-3 px-4 text-zinc-500 font-medium text-sm">Tipo</th>
+              <th className="text-left py-3 px-4 text-zinc-500 font-medium text-sm">Categoria</th>
+              <th className="text-left py-3 px-4 text-zinc-500 font-medium text-sm">Data</th>
+              <th className="text-left py-3 px-4 text-zinc-500 font-medium text-sm">Status</th>
+              <th className="text-right py-3 px-4 text-zinc-500 font-medium text-sm">Valor</th>
+              <th className="text-right py-3 px-4 text-zinc-500 font-medium text-sm">Ações</th>
             </tr>
           </thead>
           <tbody>
             {transactions.map((tx) => (
-              <tr key={tx.id} className="border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
-                <td className="py-3 px-4 text-white">{tx.description || '-'}</td>
+              <tr key={tx.id} className="border-b border-zinc-50 hover:bg-zinc-50 transition-colors">
+                <td className="py-3 px-4 text-zinc-900">{tx.description || '-'}</td>
                 <td className="py-3 px-4">
-                  <span className={`text-sm font-medium ${tx.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                  <span className={`text-sm font-medium text-zinc-900`}>
                     {tx.type === 'income' ? 'Receita' : 'Despesa'}
                   </span>
                 </td>
-                <td className="py-3 px-4 text-slate-300">{categories.find(c => c.id === tx.categoryId)?.name || '-'}</td>
-                <td className="py-3 px-4 text-slate-400 text-sm">
+                <td className="py-3 px-4 text-zinc-600">{categories.find(c => c.id === tx.categoryId)?.name || '-'}</td>
+                <td className="py-3 px-4 text-zinc-500 text-sm">
                   {new Date(tx.date).toLocaleDateString('pt-BR')}
                 </td>
                 <td className="py-3 px-4">
-                  <span className={`text-xs font-medium px-2 py-1 rounded ${
-                    tx.status === 'completed' ? 'bg-green-500/20 text-green-400' :
-                    tx.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                    'bg-red-500/20 text-red-400'
+                  <span className={`text-xs font-medium px-2 py-1 rounded border ${
+                    tx.status === 'completed' ? 'bg-zinc-100 border-zinc-200 text-zinc-900' :
+                    tx.status === 'pending' ? 'bg-zinc-50 border-zinc-200 text-zinc-600' :
+                    'bg-zinc-50 border-zinc-200 text-zinc-400'
                   }`}>
                     {tx.status === 'completed' ? 'Concluído' : tx.status === 'pending' ? 'Pendente' : 'Cancelado'}
                   </span>
                 </td>
-                <td className={`py-3 px-4 text-right font-medium ${
-                  tx.type === 'income' ? 'text-green-400' : 'text-red-400'
-                }`}>
+                <td className={`py-3 px-4 text-right font-medium text-zinc-900`}>
                   {tx.type === 'income' ? '+' : '-'} R$ {tx.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </td>
                 <td className="py-3 px-4 text-right space-x-2">
                   <button
                     onClick={() => handleEdit(tx)}
-                    className="p-1 hover:bg-blue-500/20 rounded transition-colors text-blue-400"
+                    className="p-1 hover:bg-zinc-100 rounded transition-colors text-zinc-600"
                   >
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(tx.id)}
-                    className="p-1 hover:bg-red-500/20 rounded transition-colors text-red-400"
+                    className="p-1 hover:bg-zinc-100 rounded transition-colors text-zinc-600"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
