@@ -19,6 +19,7 @@
     "react-router-dom": "^7.18.1",
     "recharts": "^3.9.2",
     "tailwindcss": "^4.3.3",
+    "wouter": "^3.10.0",
     "zustand": "^5.0.14"
   },
   "devDependencies": {

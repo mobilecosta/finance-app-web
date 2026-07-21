@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import { useAuthStore } from '../store/authStore';
 
 export default function AuthCallback() {
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation();
   const { setToken, loadUser } = useAuthStore();
 
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { Route, Switch } from 'wouter';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useAuthStore } from './store/authStore';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -15,7 +15,6 @@ import Settings from './pages/Settings';
 
 function AppRoutes() {
   const { token } = useAuthStore();
-  const [location, setLocation] = useState('/');
 
   return (
     <Switch>
