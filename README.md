@@ -109,6 +109,77 @@ O frontend consome a API do **Finance Backend** (`finance-backend-mobile.vercel.
 | PUT | `/api/finance/categories/:id` | Atualizar categoria |
 | DELETE | `/api/finance/categories/:id` | Remover categoria |
 
+## NFS-e e Empresas (ACBr API)
+
+O módulo **NFS-e** e **Empresas** consome a [ACBr API](https://acbr.api.br/) para emissão de Nota Fiscal de Serviços Eletrônica e gestão de empresas/prestadores.
+
+### Arquitetura
+
+As requisições são roteadas através do **Finance Backend** para evitar problemas de CORS:
+
+```
+Frontend (React)
+    ↓ axios /api/acbr/*
+Backend (Express)
+    ↓ fetch
+ACBr API (hom.acbr.api.br | prod.acbr.api.br)
+```
+
+### Endpoints ACBr (proxy via backend)
+
+#### Autenticação
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| POST | `/api/acbr/auth` | Autentica na ACBr API e retorna access_token |
+
+Body: `{ client_id, client_secret }`
+
+#### Empresas
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/api/acbr/empresas` | Listar empresas |
+| POST | `/api/acbr/empresas` | Cadastrar empresa |
+| GET | `/api/acbr/empresas/{cpf_cnpj}` | Consultar empresa |
+| PUT | `/api/acbr/empresas/{cpf_cnpj}` | Alterar empresa |
+| DELETE | `/api/acbr/empresas/{cpf_cnpj}` | Deletar empresa |
+| GET | `/api/acbr/empresas/{cpf_cnpj}/certificado` | Consultar certificado |
+| PUT | `/api/acbr/empresas/{cpf_cnpj}/certificado` | Cadastrar certificado |
+| DELETE | `/api/acbr/empresas/{cpf_cnpj}/certificado` | Deletar certificado |
+| GET | `/api/acbr/empresas/{cpf_cnpj}/nfse` | Consultar config NFS-e |
+| PUT | `/api/acbr/empresas/{cpf_cnpj}/nfse` | Alterar config NFS-e |
+
+#### NFS-e
+
+| Método | Endpoint | Descrição |
+|--------|----------|-----------|
+| GET | `/api/acbr/nfse` | Listar NFS-e |
+| GET | `/api/acbr/nfse/{id}` | Consultar NFS-e |
+| POST | `/api/acbr/nfse/dps` | Emitir NFS-e |
+| POST | `/api/acbr/nfse/{id}/cancelamento` | Cancelar NFS-e |
+| GET | `/api/acbr/nfse/{id}/cancelamento` | Consultar cancelamento |
+| POST | `/api/acbr/nfse/{id}/sincronizar` | Sincronizar com prefeitura |
+| GET | `/api/acbr/nfse/cidades` | Listar cidades atendidas |
+| GET | `/api/acbr/nfse/cidades/{codigo_ibge}` | Metadados da cidade |
+
+> Parâmetro `ambiente=homologacao|producao` disponível em todos os endpoints.
+
+### Credenciais
+
+Configure no `.env` ou pela interface em **NFS-e > Credenciais**:
+
+```env
+VITE_ACBR_CLIENT_ID=seu-client-id
+VITE_ACBR_CLIENT_SECRET=seu-client-secret
+```
+
+### Documentação oficial ACBr
+
+- [https://dev.acbr.api.br/docs/nfse](https://dev.acbr.api.br/docs/nfse)
+- [https://dev.acbr.api.br/docs/empresas](https://dev.acbr.api.br/docs/empresas)
+- [https://dev.acbr.api.br/docs/autenticacao](https://dev.acbr.api.br/docs/autenticacao)
+
 ## Build & Deploy
 
 ```bash

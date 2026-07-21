@@ -1,6 +1,16 @@
-const ACBR_AUTH_URL = 'https://auth.acbr.api.br/realms/ACBrAPI/protocol/openid-connect/token';
-const ACBR_HOM_URL = 'https://hom.acbr.api.br';
-const ACBR_PROD_URL = 'https://prod.acbr.api.br';
+import axios from 'axios';
+
+const acbrHttp = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'https://finance-backend-liard.vercel.app/api',
+  headers: { 'Content-Type': 'application/json' },
+});
+
+export function extractError(e: unknown): string {
+  if (axios.isAxiosError(e) && e.response?.data?.message) {
+    return e.response.data.message;
+  }
+  return e instanceof Error ? e.message : 'Erro desconhecido';
+}
 
 export interface NfseCredentials {
   clientId: string;
@@ -67,56 +77,27 @@ async function getAccessToken(): Promise<string> {
     return cachedToken.token;
   }
 
-  const body = new URLSearchParams({
-    grant_type: 'client_credentials',
+  const res = await acbrHttp.post('/acbr/auth', {
     client_id: creds.clientId,
     client_secret: creds.clientSecret,
-    scope: 'empresa nfse',
-  }).toString();
-
-  const res = await fetch(ACBR_AUTH_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body,
   });
 
-  if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Falha na autenticação ACBr: ${text}`);
-  }
-
-  const data = await res.json();
-  cachedToken = { token: data.access_token, expiresAt: Date.now() + (data.expires_in || 3600) * 1000 };
-  return data.access_token;
+  cachedToken = { token: res.data.access_token, expiresAt: Date.now() + (res.data.expires_in || 3600) * 1000 };
+  return res.data.access_token;
 }
 
 async function request<T>(path: string, options?: { method?: string; body?: unknown; query?: Record<string, string>; environment?: string }): Promise<T> {
   const token = await getAccessToken();
-  const baseUrl = options?.environment === 'producao' ? ACBR_PROD_URL : ACBR_HOM_URL;
-  let url = `${baseUrl}${path}`;
-  if (options?.query) {
-    url += '?' + new URLSearchParams(options.query).toString();
-  }
-
-  const res = await fetch(url, {
+  const ambiente = options?.environment === 'producao' ? 'producao' : 'homologacao';
+  const params = { ...options?.query, ambiente };
+  const res = await acbrHttp.request<T>({
     method: options?.method ?? 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-    body: options?.body ? JSON.stringify(options.body) : undefined,
+    url: `/acbr${path}`,
+    params,
+    data: options?.body,
+    headers: { Authorization: `Bearer ${token}` },
   });
-
-  if (!res.ok) {
-    const text = await res.text();
-    let msg = text;
-    try { const json = JSON.parse(text); msg = json.message || json.error || text; } catch { }
-    throw new Error(msg);
-  }
-
-  const ct = res.headers.get('content-type');
-  if (ct?.includes('application/json')) return res.json() as Promise<T>;
-  return res.text() as unknown as Promise<T>;
+  return res.data;
 }
 
 export const nfseAPI = {
