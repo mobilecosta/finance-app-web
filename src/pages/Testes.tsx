@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Play, CheckCircle, XCircle, Clock, Zap } from 'lucide-react';
+import api from '../services/api';
 
 interface Test {
   id: number;
@@ -45,30 +46,29 @@ export default function Testes() {
   const fetchTests = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `/api/tests?page=${page}&pageSize=${pageSize}`
-      );
-      const data = await response.json();
-      if (data.data) {
-        setTests(data.data.items || []);
-        setStats({
-          totalTests: data.data.totalRecords,
-          passed: Math.floor(data.data.totalRecords * 0.9),
-          failed: Math.ceil(data.data.totalRecords * 0.1),
-          skipped: 0,
-          totalDuration: 2469,
-          averageDuration: 246.9,
-          passRate: 90,
-          failureRate: 10,
-          lastRun: new Date().toISOString(),
-          coverage: {
-            lines: 92,
-            branches: 88,
-            functions: 95,
-            statements: 91,
-          },
-        });
-      }
+      const response = await api.get(`/tests?page=${page}&pageSize=${pageSize}`);
+      const data = response.data;
+      const items = Array.isArray(data) ? data : data?.data ?? [];
+      setTests(items.map((t: any, i: number) => ({
+        id: t.id ?? i,
+        name: t.name ?? `Teste #${t.id}`,
+        description: t.description ?? `Executado em ${new Date(t.createdAt).toLocaleString('pt-BR')}`,
+        status: t.status ?? 'pending',
+        duration: t.duration ?? 0,
+        timestamp: t.createdAt ?? new Date().toISOString(),
+      })));
+      setStats({
+        totalTests: items.length,
+        passed: items.filter((t: any) => t.status === 'passed').length,
+        failed: items.filter((t: any) => t.status === 'failed').length,
+        skipped: items.filter((t: any) => t.status === 'pending' || t.status === 'skipped').length,
+        totalDuration: items.reduce((s: number, t: any) => s + (t.duration ?? 0), 0),
+        averageDuration: items.length ? Math.round(items.reduce((s: number, t: any) => s + (t.duration ?? 0), 0) / items.length) : 0,
+        passRate: items.length ? Math.round((items.filter((t: any) => t.status === 'passed').length / items.length) * 100) : 0,
+        failureRate: items.length ? Math.round((items.filter((t: any) => t.status === 'failed').length / items.length) * 100) : 0,
+        lastRun: items.length ? items[0].timestamp : new Date().toISOString(),
+        coverage: { lines: 0, branches: 0, functions: 0, statements: 0 },
+      });
     } catch (error) {
       console.error('Erro ao buscar testes:', error);
     } finally {
@@ -79,14 +79,8 @@ export default function Testes() {
   const runAllTests = async () => {
     try {
       setRunning(true);
-      const response = await fetch('/api/tests/run-all', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const data = await response.json();
-      if (data) {
-        await fetchTests();
-      }
+      await api.post('/tests/run-all');
+      await fetchTests();
     } catch (error) {
       console.error('Erro ao executar testes:', error);
     } finally {
@@ -96,18 +90,13 @@ export default function Testes() {
 
   const runSingleTest = async (testId: number) => {
     try {
-      const response = await fetch(`/api/tests/${testId}/run`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
-      const data = await response.json();
-      if (data) {
-        setTests(tests.map(t =>
-          t.id === testId
-            ? { ...t, status: data.status || 'passed', duration: data.duration || t.duration }
-            : t
-        ));
-      }
+      const res = await api.post(`/tests/${testId}/run`);
+      const data = res.data;
+      setTests(tests.map(t =>
+        t.id === testId
+          ? { ...t, status: data.status || 'passed', duration: data.duration || t.duration }
+          : t
+      ));
     } catch (error) {
       console.error('Erro ao executar teste:', error);
     }
