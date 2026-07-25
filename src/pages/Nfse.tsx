@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader, AlertCircle, CheckCircle, X, Eye } from 'lucide-react';
+import { Loader, AlertCircle, CheckCircle, X, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import { nfseAPI, extractError, type NfseCredentials, type NfseListagemItem, type NfseDetalhe } from '../services/nfse-api';
 
 type Tab = 'credenciais' | 'listar' | 'consultar' | 'emitir' | 'cancelar';
@@ -48,6 +48,9 @@ export default function Nfse() {
 
   const [listCnpj, setListCnpj] = useState('');
   const [listResult, setListResult] = useState<NfseListagemItem[]>([]);
+  const [listPage, setListPage] = useState(1);
+  const [listTotal, setListTotal] = useState(0);
+  const listPageSize = 10;
   const [detailTarget, setDetailTarget] = useState<NfseDetalhe | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [consultId, setConsultId] = useState('');
@@ -98,13 +101,22 @@ export default function Nfse() {
     setViewState('success');
   }
 
+  async function fetchListPage(page: number) {
+    setViewState('loading');
+    try {
+      const skip = (page - 1) * listPageSize;
+      const res = await nfseAPI.listar(listCnpj, ambiente, listPageSize, skip);
+      setListResult(res.data ?? []);
+      setListTotal(res['@count'] ?? 0);
+      setListPage(page);
+      setViewState('success');
+    } catch (e) { setErrorMsg(extractError(e)); setViewState('error'); }
+  }
+
   async function handleListar() {
     if (!listCnpj) { setErrorMsg('Informe o CPF/CNPJ'); setViewState('error'); return; }
-    clearMessages(); setViewState('loading');
-    try {
-      const res = await nfseAPI.listar(listCnpj, ambiente);
-      setListResult(res.data ?? []); setViewState('success');
-    } catch (e) { setErrorMsg(extractError(e)); setViewState('error'); }
+    clearMessages();
+    await fetchListPage(1);
   }
 
   async function handleVerDetalhes(item: NfseListagemItem) {
@@ -273,6 +285,27 @@ export default function Nfse() {
               )}
               {listResult.length === 0 && viewState === 'success' && (
                 <p className="text-sm text-zinc-500">Nenhuma NFS-e encontrada</p>
+              )}
+
+              {/* Pagination */}
+              {listResult.length > 0 && (
+                <div className="flex items-center justify-between pt-2">
+                  <p className="text-sm text-zinc-500">
+                    {listTotal > 0
+                      ? `Pagina ${listPage} (${(listPage - 1) * listPageSize + 1}-${Math.min(listPage * listPageSize, listTotal)} de ${listTotal})`
+                      : `Pagina ${listPage}`}
+                  </p>
+                  <div className="flex gap-2">
+                    <button onClick={() => fetchListPage(listPage - 1)} disabled={listPage === 1 || viewState === 'loading'}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-zinc-400 hover:text-white hover:bg-zinc-800">
+                      <ChevronLeft className="w-4 h-4" /> Anterior
+                    </button>
+                    <button onClick={() => fetchListPage(listPage + 1)} disabled={listPage * listPageSize >= (listTotal || Infinity) || viewState === 'loading'}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-zinc-400 hover:text-white hover:bg-zinc-800">
+                      Proximo <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
               )}
 
               {/* Detalhes Modal */}
