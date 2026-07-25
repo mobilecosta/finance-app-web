@@ -3,7 +3,7 @@ import { Link, useLocation } from 'wouter';
 import { useAuthStore } from '../store/authStore';
 import {
   BarChart3, CreditCard, Settings, LogOut,
-  Menu, X, Wallet, Tag, TrendingUp, FileText, Building2,
+  Menu, X, Wallet, Tag, TrendingUp, FileText, Building2, TestTube,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -22,6 +22,7 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/categories', label: 'Categorias', icon: Tag },
     { path: '/empresas', label: 'Empresas', icon: Building2 },
     { path: '/nfse', label: 'NFS-e', icon: FileText },
+    { path: '/testes', label: 'Testes', icon: TestTube },
     { path: '/settings', label: 'Configurações', icon: Settings },
   ];
 

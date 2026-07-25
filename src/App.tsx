@@ -12,6 +12,7 @@ import Categories from './pages/Categories';
 import Empresas from './pages/Empresas';
 import Nfse from './pages/Nfse';
 import Settings from './pages/Settings';
+import Testes from './pages/Testes';
 
 function AppRoutes() {
   const { token } = useAuthStore();
@@ -80,6 +81,14 @@ function AppRoutes() {
         <ProtectedRoute>
           <Layout>
             <Settings />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+
+      <Route path="/testes">
+        <ProtectedRoute>
+          <Layout>
+            <Testes />
           </Layout>
         </ProtectedRoute>
       </Route>
