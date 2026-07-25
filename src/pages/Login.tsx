@@ -6,7 +6,7 @@ import { AlertCircle, Loader, Wallet } from 'lucide-react';
 export default function Login() {
   const [, setLocation] = useLocation();
   const { signin, signup, loading, error, clearError } = useAuthStore();
-  
+
   const [isSignup, setIsSignup] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,45 +41,43 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-zinc-800/20 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-zinc-800/10 rounded-full blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-black rounded-2xl mb-4">
-            <Wallet className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg shadow-white/5">
+            <Wallet className="w-8 h-8 text-black" />
           </div>
-          <h1 className="text-3xl font-bold text-zinc-900 mb-2">Finance Pro</h1>
-          <p className="text-zinc-500">Gerencie suas finanças com facilidade</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Finance Pro</h1>
+          <p className="text-zinc-400">Gerencie suas finanças com facilidade</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white border border-zinc-200 rounded-2xl p-8 shadow-sm">
+        <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-2xl p-8 shadow-2xl">
           {/* Tabs */}
-          <div className="flex gap-2 mb-6">
+          <div className="flex gap-2 mb-6 bg-zinc-800/50 rounded-lg p-1">
             <button
-              onClick={() => {
-                setIsSignup(false);
-                setLocalError('');
-                clearError();
-              }}
-              className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+              onClick={() => { setIsSignup(false); setLocalError(''); clearError(); }}
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 text-sm ${
                 !isSignup
-                  ? 'bg-black text-white'
-                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               Login
             </button>
             <button
-              onClick={() => {
-                setIsSignup(true);
-                setLocalError('');
-                clearError();
-              }}
-              className={`flex-1 py-2 px-4 rounded-lg font-medium transition-colors ${
+              onClick={() => { setIsSignup(true); setLocalError(''); clearError(); }}
+              className={`flex-1 py-2 px-4 rounded-md font-medium transition-all duration-200 text-sm ${
                 isSignup
-                  ? 'bg-black text-white'
-                  : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
+                  ? 'bg-white text-black shadow-sm'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
               Cadastro
@@ -88,9 +86,9 @@ export default function Login() {
 
           {/* Error Message */}
           {(error || localError) && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-red-600 text-sm">{error || localError}</p>
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3 animate-slide-up">
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-red-400 text-sm">{error || localError}</p>
             </div>
           )}
 
@@ -98,7 +96,7 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignup && (
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-2">
+                <label className="block text-sm font-medium text-zinc-300 mb-2">
                   Nome Completo
                 </label>
                 <input
@@ -113,7 +111,7 @@ export default function Login() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-2">
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
                 Email
               </label>
               <input
@@ -127,7 +125,7 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-700 mb-2">
+              <label className="block text-sm font-medium text-zinc-300 mb-2">
                 Senha
               </label>
               <input
@@ -143,7 +141,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2 px-4 bg-black text-white rounded-lg font-medium hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-4 bg-white text-black rounded-lg font-medium hover:bg-zinc-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm"
             >
               {loading && <Loader className="w-4 h-4 animate-spin" />}
               {isSignup ? 'Criar Conta' : 'Entrar'}
@@ -151,10 +149,14 @@ export default function Login() {
           </form>
 
           {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-zinc-50 rounded-lg border border-zinc-100">
-            <p className="text-xs text-zinc-500 mb-2">Demo:</p>
-            <p className="text-xs text-zinc-700">Email: demo@example.com</p>
-            <p className="text-xs text-zinc-700">Senha: demo123456</p>
+          <div className="mt-6 p-4 bg-zinc-800/50 rounded-xl border border-zinc-700/50">
+            <p className="text-xs text-zinc-500 mb-2 uppercase tracking-wider font-medium">Acesso Demo</p>
+            <p className="text-xs text-zinc-400">
+              <span className="text-zinc-500">Email:</span> demo@example.com
+            </p>
+            <p className="text-xs text-zinc-400">
+              <span className="text-zinc-500">Senha:</span> demo123456
+            </p>
           </div>
         </div>
       </div>

@@ -13,50 +13,119 @@ html, body, #root {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #ffffff;
-  color: #111827;
+  background-color: #0f0f0f;
+  color: #f4f4f5;
 }
 
 ::-webkit-scrollbar {
   width: 8px;
 }
-
 ::-webkit-scrollbar-track {
-  background: #f3f4f6;
+  background: #18181b;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: #27272a;
   border-radius: 4px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: #3f3f46;
+}
+
+::selection {
+  background: #52525b;
+  color: #fafafa;
 }
 
 @theme {
-  --color-primary: #000000;
-  --color-secondary: #f3f4f6;
+  --color-primary: #ffffff;
+  --color-secondary: #27272a;
 }
 
 @layer components {
   .btn-primary {
-    @apply px-4 py-2 bg-black text-white rounded-lg hover:bg-zinc-800 transition-colors;
+    @apply px-4 py-2 bg-white text-black rounded-lg hover:bg-zinc-200 transition-all duration-200 font-medium text-sm;
   }
 
   .btn-secondary {
-    @apply px-4 py-2 bg-zinc-100 text-zinc-900 border border-zinc-200 rounded-lg hover:bg-zinc-200 transition-colors;
+    @apply px-4 py-2 bg-zinc-800 text-zinc-100 border border-zinc-700 rounded-lg hover:bg-zinc-700 transition-all duration-200 font-medium text-sm;
+  }
+
+  .btn-ghost {
+    @apply px-4 py-2 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-all duration-200 font-medium text-sm;
   }
 
   .card {
-    @apply bg-white border border-zinc-200 rounded-lg p-4 shadow-sm;
+    @apply bg-zinc-900 border border-zinc-800 rounded-xl p-5 shadow-sm;
+  }
+
+  .card-hover {
+    @apply card hover:bg-zinc-800/80 hover:border-zinc-700 transition-all duration-200;
   }
 
   .input {
-    @apply w-full px-3 py-2 bg-white border border-zinc-300 rounded-lg text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-black transition-colors;
+    @apply w-full px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-all duration-200 text-sm;
   }
+
+  select.input {
+    @apply bg-zinc-800;
+  }
+
+  input[type="color"].input {
+    @apply h-10 p-1 cursor-pointer;
+  }
+
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4;
+    animation: fadeIn 0.15s ease-out;
+  }
+
+  .modal-content {
+    @apply bg-zinc-900 border border-zinc-800 rounded-xl p-6 max-w-md w-full shadow-2xl;
+    animation: slideUp 0.2s ease-out;
+  }
+
+  .badge {
+    @apply text-xs font-medium px-2 py-0.5 rounded;
+  }
+
+  .badge-success {
+    @apply badge bg-emerald-500/15 text-emerald-400 border border-emerald-500/20;
+  }
+
+  .badge-warning {
+    @apply badge bg-amber-500/15 text-amber-400 border border-amber-500/20;
+  }
+
+  .badge-error {
+    @apply badge bg-red-500/15 text-red-400 border border-red-500/20;
+  }
+
+  .badge-info {
+    @apply badge bg-blue-500/15 text-blue-400 border border-blue-500/20;
+  }
+
+  .badge-neutral {
+    @apply badge bg-zinc-700/50 text-zinc-400 border border-zinc-700;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
 }

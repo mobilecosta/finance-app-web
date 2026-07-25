@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { transactionsAPI, type Transaction, type Category, type Account, accountsAPI, categoriesAPI } from '../services/api';
-import { Plus, Trash2, Edit2, Loader, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, Edit2, Loader, AlertCircle, X } from 'lucide-react';
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -10,7 +10,8 @@ export default function Transactions() {
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  
+  const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+
   const [formData, setFormData] = useState({
     type: 'expense' as 'income' | 'expense',
     amount: '',
@@ -28,6 +29,7 @@ export default function Transactions() {
   const loadData = async () => {
     try {
       setLoading(true);
+      setError('');
       const [txRes, catRes, accRes] = await Promise.all([
         transactionsAPI.list(),
         categoriesAPI.list(),
@@ -69,15 +71,7 @@ export default function Transactions() {
       }
       setShowModal(false);
       setEditingId(null);
-      setFormData({
-        type: 'expense',
-        amount: '',
-        description: '',
-        date: new Date().toISOString().split('T')[0],
-        status: 'completed',
-        categoryId: '',
-        accountId: '',
-      });
+      resetForm();
       loadData();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Erro ao salvar transação');
@@ -85,12 +79,13 @@ export default function Transactions() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('Tem certeza que deseja deletar esta transação?')) return;
     try {
       await transactionsAPI.delete(id);
+      setDeleteConfirm(null);
       loadData();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Erro ao deletar transação');
+      setDeleteConfirm(null);
     }
   };
 
@@ -108,10 +103,22 @@ export default function Transactions() {
     setShowModal(true);
   };
 
+  const resetForm = () => {
+    setFormData({
+      type: 'expense',
+      amount: '',
+      description: '',
+      date: new Date().toISOString().split('T')[0],
+      status: 'completed',
+      categoryId: '',
+      accountId: '',
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader className="w-8 h-8 text-black animate-spin" />
+        <Loader className="w-8 h-8 text-zinc-400 animate-spin" />
       </div>
     );
   }
@@ -121,50 +128,47 @@ export default function Transactions() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-zinc-900 mb-2">Transações</h1>
+          <h1 className="text-3xl font-bold text-white mb-1">Transações</h1>
           <p className="text-zinc-500">Gerencie suas transações financeiras</p>
         </div>
         <button
           onClick={() => {
             setEditingId(null);
-            setFormData({
-              type: 'expense',
-              amount: '',
-              description: '',
-              date: new Date().toISOString().split('T')[0],
-              status: 'completed',
-              categoryId: '',
-              accountId: '',
-            });
+            resetForm();
             setShowModal(true);
           }}
           className="btn-primary flex items-center gap-2"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4" />
           Nova Transação
         </button>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <p className="text-red-600">{error}</p>
+        <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+          <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+          <p className="text-red-400 text-sm">{error}</p>
         </div>
       )}
 
-      {/* Modal */}
+      {/* Form Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white border border-zinc-200 rounded-lg p-6 max-w-md w-full shadow-xl">
-            <h2 className="text-xl font-bold text-zinc-900 mb-4">
-              {editingId ? 'Editar Transação' : 'Nova Transação'}
-            </h2>
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-white">
+                {editingId ? 'Editar Transação' : 'Nova Transação'}
+              </h2>
+              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-zinc-800 rounded-lg transition-colors text-zinc-500">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-2">Tipo</label>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">Tipo</label>
                   <select
                     value={formData.type}
                     onChange={(e) => setFormData({ ...formData, type: e.target.value as 'income' | 'expense' })}
@@ -174,9 +178,8 @@ export default function Transactions() {
                     <option value="income">Receita</option>
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-2">Valor</label>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">Valor</label>
                   <input
                     type="number"
                     step="0.01"
@@ -190,7 +193,7 @@ export default function Transactions() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-zinc-700 mb-2">Descrição</label>
+                <label className="block text-sm font-medium text-zinc-300 mb-2">Descrição</label>
                 <input
                   type="text"
                   value={formData.description}
@@ -202,7 +205,7 @@ export default function Transactions() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-2">Data</label>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">Data</label>
                   <input
                     type="date"
                     value={formData.date}
@@ -211,9 +214,8 @@ export default function Transactions() {
                     required
                   />
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-2">Status</label>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">Status</label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as 'completed' | 'pending' | 'cancelled' })}
@@ -228,7 +230,7 @@ export default function Transactions() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-2">Categoria</label>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">Categoria</label>
                   <select
                     value={formData.categoryId}
                     onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
@@ -241,9 +243,8 @@ export default function Transactions() {
                     ))}
                   </select>
                 </div>
-
                 <div>
-                  <label className="block text-sm font-medium text-zinc-700 mb-2">Conta</label>
+                  <label className="block text-sm font-medium text-zinc-300 mb-2">Conta</label>
                   <select
                     value={formData.accountId}
                     onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
@@ -258,18 +259,11 @@ export default function Transactions() {
                 </div>
               </div>
 
-              <div className="flex gap-2 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 btn-primary"
-                >
+              <div className="flex gap-2 pt-2">
+                <button type="submit" className="flex-1 btn-primary">
                   {editingId ? 'Atualizar' : 'Criar'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 btn-secondary"
-                >
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 btn-secondary">
                   Cancelar
                 </button>
               </div>
@@ -278,56 +272,68 @@ export default function Transactions() {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm !== null && (
+        <div className="modal-overlay" onClick={() => setDeleteConfirm(null)}>
+          <div className="modal-content max-w-sm" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-semibold text-white mb-2">Confirmar exclusão</h2>
+            <p className="text-sm text-zinc-400 mb-6">Tem certeza que deseja excluir esta transação? Esta ação não pode ser desfeita.</p>
+            <div className="flex gap-2">
+              <button onClick={() => handleDelete(deleteConfirm)} className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium text-sm">
+                Excluir
+              </button>
+              <button onClick={() => setDeleteConfirm(null)} className="flex-1 btn-secondary">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Transactions Table */}
       <div className="card overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-zinc-100">
-              <th className="text-left py-3 px-4 text-zinc-500 font-medium text-sm">Descrição</th>
-              <th className="text-left py-3 px-4 text-zinc-500 font-medium text-sm">Tipo</th>
-              <th className="text-left py-3 px-4 text-zinc-500 font-medium text-sm">Categoria</th>
-              <th className="text-left py-3 px-4 text-zinc-500 font-medium text-sm">Data</th>
-              <th className="text-left py-3 px-4 text-zinc-500 font-medium text-sm">Status</th>
-              <th className="text-right py-3 px-4 text-zinc-500 font-medium text-sm">Valor</th>
-              <th className="text-right py-3 px-4 text-zinc-500 font-medium text-sm">Ações</th>
+            <tr className="border-b border-zinc-800">
+              <th className="text-left py-3 px-4 text-zinc-500 font-medium text-xs uppercase tracking-wider">Descrição</th>
+              <th className="text-left py-3 px-4 text-zinc-500 font-medium text-xs uppercase tracking-wider">Tipo</th>
+              <th className="text-left py-3 px-4 text-zinc-500 font-medium text-xs uppercase tracking-wider">Categoria</th>
+              <th className="text-left py-3 px-4 text-zinc-500 font-medium text-xs uppercase tracking-wider">Data</th>
+              <th className="text-left py-3 px-4 text-zinc-500 font-medium text-xs uppercase tracking-wider">Status</th>
+              <th className="text-right py-3 px-4 text-zinc-500 font-medium text-xs uppercase tracking-wider">Valor</th>
+              <th className="text-right py-3 px-4 text-zinc-500 font-medium text-xs uppercase tracking-wider">Ações</th>
             </tr>
           </thead>
           <tbody>
             {transactions.map((tx) => (
-              <tr key={tx.id} className="border-b border-zinc-50 hover:bg-zinc-50 transition-colors">
-                <td className="py-3 px-4 text-zinc-900">{tx.description || '-'}</td>
-                <td className="py-3 px-4">
-                  <span className={`text-sm font-medium text-zinc-900`}>
-                    {tx.type === 'income' ? 'Receita' : 'Despesa'}
-                  </span>
+              <tr key={tx.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/50 transition-colors">
+                <td className="py-3 px-4 text-zinc-100 text-sm">{tx.description || '-'}</td>
+                <td className="py-3 px-4 text-sm text-zinc-300">
+                  {tx.type === 'income' ? 'Receita' : 'Despesa'}
                 </td>
-                <td className="py-3 px-4 text-zinc-600">{categories.find(c => c.id === tx.categoryId)?.name || '-'}</td>
+                <td className="py-3 px-4 text-zinc-400 text-sm">{categories.find(c => c.id === tx.categoryId)?.name || '-'}</td>
                 <td className="py-3 px-4 text-zinc-500 text-sm">
                   {new Date(tx.date).toLocaleDateString('pt-BR')}
                 </td>
                 <td className="py-3 px-4">
-                  <span className={`text-xs font-medium px-2 py-1 rounded border ${
-                    tx.status === 'completed' ? 'bg-zinc-100 border-zinc-200 text-zinc-900' :
-                    tx.status === 'pending' ? 'bg-zinc-50 border-zinc-200 text-zinc-600' :
-                    'bg-zinc-50 border-zinc-200 text-zinc-400'
+                  <span className={`badge ${
+                    tx.status === 'completed' ? 'badge-success' :
+                    tx.status === 'pending' ? 'badge-warning' :
+                    'badge-error'
                   }`}>
                     {tx.status === 'completed' ? 'Concluído' : tx.status === 'pending' ? 'Pendente' : 'Cancelado'}
                   </span>
                 </td>
-                <td className={`py-3 px-4 text-right font-medium text-zinc-900`}>
+                <td className={`py-3 px-4 text-right font-medium text-sm ${
+                  tx.type === 'income' ? 'text-emerald-400' : 'text-red-400'
+                }`}>
                   {tx.type === 'income' ? '+' : '-'} R$ {tx.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </td>
-                <td className="py-3 px-4 text-right space-x-2">
-                  <button
-                    onClick={() => handleEdit(tx)}
-                    className="p-1 hover:bg-zinc-100 rounded transition-colors text-zinc-600"
-                  >
+                <td className="py-3 px-4 text-right space-x-1">
+                  <button onClick={() => handleEdit(tx)} className="p-1.5 hover:bg-zinc-800 rounded-lg transition-colors text-zinc-400 hover:text-blue-400">
                     <Edit2 className="w-4 h-4" />
                   </button>
-                  <button
-                    onClick={() => handleDelete(tx.id)}
-                    className="p-1 hover:bg-zinc-100 rounded transition-colors text-zinc-600"
-                  >
+                  <button onClick={() => setDeleteConfirm(tx.id)} className="p-1.5 hover:bg-zinc-800 rounded-lg transition-colors text-zinc-400 hover:text-red-400">
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </td>
@@ -335,6 +341,11 @@ export default function Transactions() {
             ))}
           </tbody>
         </table>
+        {transactions.length === 0 && (
+          <div className="text-center py-12 text-zinc-500 text-sm">
+            Nenhuma transação encontrada
+          </div>
+        )}
       </div>
     </div>
   );
