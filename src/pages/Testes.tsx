@@ -37,6 +37,7 @@ export default function Testes() {
   const [running, setRunning] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
+  const [hasNext, setHasNext] = useState(false);
   const [runMessage, setRunMessage] = useState('');
   const [runError, setRunError] = useState('');
 
@@ -50,12 +51,15 @@ export default function Testes() {
       setLoading(true);
       const response = await api.get(`/tests?page=${page}&pageSize=${pageSize}`);
       const data = response.data;
-      const items = Array.isArray(data) ? data : data?.data ?? [];
+      const items: any[] = Array.isArray(data) ? data : data?.items ?? data?.data ?? [];
+      setHasNext(!Array.isArray(data) && data?.hasNext === true);
       setTests(items.map((t: any, i: number) => ({
         id: t.id ?? i,
-        name: t.name ?? `Teste #${t.id}`,
-        description: t.description ?? `Executado em ${new Date(t.createdAt).toLocaleString('pt-BR')}`,
-        status: t.status ?? 'pending',
+        name: `Teste #${t.id} - ${t.date ?? new Date(t.createdAt).toLocaleDateString('pt-BR')}`,
+        description: t.reportHtml
+          ? `Relatório HTML disponível (${(t.reportHtml.length / 1024).toFixed(0)} KB)`
+          : `Executado em ${t.date ?? new Date(t.createdAt).toLocaleDateString('pt-BR')} às ${t.time ?? ''}`,
+        status: t.status ?? 'passed',
         duration: t.duration ?? 0,
         timestamp: t.createdAt ?? new Date().toISOString(),
       })));
@@ -266,7 +270,8 @@ export default function Testes() {
           <span className="text-zinc-400">Página {page}</span>
           <button
             onClick={() => setPage(page + 1)}
-            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded transition-colors"
+            disabled={!hasNext}
+            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded disabled:opacity-50 transition-colors"
           >
             Próxima
           </button>
