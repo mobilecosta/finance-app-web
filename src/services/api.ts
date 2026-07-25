@@ -1,5 +1,15 @@
 import axios, { type AxiosInstance } from 'axios';
 
+export interface PaginatedResponse<T> {
+  items: T[];
+  hasNext: boolean;
+}
+
+export interface PaginationParams {
+  page?: number;
+  pageSize?: number;
+}
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://finance-backend-liard.vercel.app/api';
 
 const api: AxiosInstance = axios.create({
@@ -67,8 +77,8 @@ export interface Account {
 }
 
 export const accountsAPI = {
-  list: () =>
-    api.get<Account[]>('/finance/accounts'),
+  list: (params?: PaginationParams) =>
+    api.get<PaginatedResponse<Account>>('/finance/accounts', { params }),
   
   get: (id: number) =>
     api.get<Account>(`/finance/accounts/${id}`),
@@ -98,8 +108,8 @@ export interface Category {
 }
 
 export const categoriesAPI = {
-  list: () =>
-    api.get<Category[]>('/finance/categories'),
+  list: (params?: PaginationParams) =>
+    api.get<PaginatedResponse<Category>>('/finance/categories', { params }),
   
   get: (id: number) =>
     api.get<Category>(`/finance/categories/${id}`),
@@ -141,8 +151,8 @@ export interface TransactionFilters {
 }
 
 export const transactionsAPI = {
-  list: (filters?: TransactionFilters) =>
-    api.get<Transaction[]>('/finance/transactions', { params: filters }),
+  list: (filters?: TransactionFilters & PaginationParams) =>
+    api.get<PaginatedResponse<Transaction>>('/finance/transactions', { params: filters }),
   
   get: (id: number) =>
     api.get<Transaction>(`/finance/transactions/${id}`),

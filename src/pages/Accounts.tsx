@@ -17,7 +17,7 @@ export default function Accounts() {
   useEffect(() => { loadAccounts(); }, []);
 
   const loadAccounts = async () => {
-    try { setLoading(true); setError(''); const response = await accountsAPI.list(); setAccounts(response.data); }
+    try { setLoading(true); setError(''); const response = await accountsAPI.list(); setAccounts(response.data.items); }
     catch (err: any) { setError(err.response?.data?.message || 'Erro ao carregar contas'); }
     finally { setLoading(false); }
   };

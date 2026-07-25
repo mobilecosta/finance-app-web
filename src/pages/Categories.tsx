@@ -17,7 +17,7 @@ export default function Categories() {
   useEffect(() => { loadCategories(); }, []);
 
   const loadCategories = async () => {
-    try { setLoading(true); setError(''); const response = await categoriesAPI.list(); setCategories(response.data); }
+    try { setLoading(true); setError(''); const response = await categoriesAPI.list(); setCategories(response.data.items); }
     catch (err: any) { setError(err.response?.data?.message || 'Erro ao carregar categorias'); }
     finally { setLoading(false); }
   };

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { transactionsAPI, type Transaction, type Category, type Account, accountsAPI, categoriesAPI } from '../services/api';
-import { Plus, Trash2, Edit2, Loader, AlertCircle, X } from 'lucide-react';
+import { Plus, Trash2, Edit2, Loader, AlertCircle, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function Transactions() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -11,6 +11,9 @@ export default function Transactions() {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
+  const pageSize = 20;
 
   const [formData, setFormData] = useState({
     type: 'expense' as 'income' | 'expense',
@@ -24,20 +27,21 @@ export default function Transactions() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [page]);
 
   const loadData = async () => {
     try {
       setLoading(true);
       setError('');
       const [txRes, catRes, accRes] = await Promise.all([
-        transactionsAPI.list(),
+        transactionsAPI.list({ page, pageSize }),
         categoriesAPI.list(),
         accountsAPI.list(),
       ]);
-      setTransactions(txRes.data);
-      setCategories(catRes.data);
-      setAccounts(accRes.data);
+      setTransactions(txRes.data.items);
+      setHasNext(txRes.data.hasNext);
+      setCategories(catRes.data.items);
+      setAccounts(accRes.data.items);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Erro ao carregar dados');
     } finally {
@@ -72,6 +76,7 @@ export default function Transactions() {
       setShowModal(false);
       setEditingId(null);
       resetForm();
+      setPage(1);
       loadData();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Erro ao salvar transação');
@@ -346,6 +351,27 @@ export default function Transactions() {
             Nenhuma transação encontrada
           </div>
         )}
+      </div>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between pt-2">
+        <p className="text-sm text-zinc-500">Página {page}</p>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-zinc-400 hover:text-white hover:bg-zinc-800"
+          >
+            <ChevronLeft className="w-4 h-4" /> Anterior
+          </button>
+          <button
+            onClick={() => setPage(p => p + 1)}
+            disabled={!hasNext}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-zinc-400 hover:text-white hover:bg-zinc-800"
+          >
+            Próximo <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
