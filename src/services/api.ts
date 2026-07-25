@@ -10,7 +10,7 @@ export interface PaginationParams {
   pageSize?: number;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://finance-backend-liard.vercel.app/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://finance-backend-mobile.vercel.app/api';
 
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
