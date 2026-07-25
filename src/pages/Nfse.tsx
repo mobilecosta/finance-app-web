@@ -247,7 +247,7 @@ export default function Nfse() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-zinc-400 mb-2">CPF/CNPJ do prestador</label>
-                <input className="input font-mono text-sm" placeholder="00000000000000" value={listCnpj} onChange={e => setListCpfCnpj(e.target.value)} />
+                <input className="input font-mono text-sm" placeholder="00000000000000" value={listCnpj} onChange={e => setListCnpj(e.target.value)} />
               </div>
               <button className="btn-primary" onClick={handleListar} disabled={viewState === 'loading'}>
                 {viewState === 'loading' ? <Loader className="w-4 h-4 animate-spin" /> : 'Listar'}
