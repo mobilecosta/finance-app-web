@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, CheckCircle, XCircle, Clock, Zap } from 'lucide-react';
+import { Play, CheckCircle, XCircle, Clock, Zap, AlertCircle } from 'lucide-react';
 import api from '../services/api';
 
 interface Test {
@@ -37,6 +37,8 @@ export default function Testes() {
   const [running, setRunning] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
+  const [runMessage, setRunMessage] = useState('');
+  const [runError, setRunError] = useState('');
 
   // Buscar testes ao carregar
   useEffect(() => {
@@ -78,11 +80,16 @@ export default function Testes() {
 
   const runAllTests = async () => {
     try {
-      setRunning(true);
-      await api.post('/tests/run-all');
+      setRunning(true); setRunMessage(''); setRunError('');
+      const res = await api.post('/tests/run-all');
+      if (res.data?.success) {
+        setRunMessage(res.data.message || 'Testes executados com sucesso');
+      } else {
+        setRunError(res.data?.error || 'Erro ao executar testes');
+      }
       await fetchTests();
-    } catch (error) {
-      console.error('Erro ao executar testes:', error);
+    } catch (error: any) {
+      setRunError(error.response?.data?.details || error.message);
     } finally {
       setRunning(false);
     }
@@ -146,6 +153,18 @@ export default function Testes() {
           {running ? 'Executando...' : 'Executar Todos'}
         </button>
       </div>
+
+      {/* Run feedback */}
+      {runMessage && (
+        <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-sm text-emerald-400">
+          <CheckCircle className="w-4 h-4 flex-shrink-0" />{runMessage}
+        </div>
+      )}
+      {runError && (
+        <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-sm text-red-400">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />{runError}
+        </div>
+      )}
 
       {/* Stats Cards */}
       {stats && (
