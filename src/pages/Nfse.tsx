@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader, AlertCircle, CheckCircle } from 'lucide-react';
+import { Loader, AlertCircle, CheckCircle, X, Eye } from 'lucide-react';
 import { nfseAPI, extractError, type NfseCredentials, type NfseListagemItem, type NfseDetalhe } from '../services/nfse-api';
 
 type Tab = 'credenciais' | 'listar' | 'consultar' | 'emitir' | 'cancelar';
@@ -46,8 +46,10 @@ export default function Nfse() {
   const [credsSaved, setCredsSaved] = useState(false);
   const [ambiente, setAmbiente] = useState<'homologacao' | 'producao'>('homologacao');
 
-  const [listCpfCnpj, setListCpfCnpj] = useState('');
+  const [listCnpj, setListCnpj] = useState('');
   const [listResult, setListResult] = useState<NfseListagemItem[]>([]);
+  const [detailTarget, setDetailTarget] = useState<NfseDetalhe | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [consultId, setConsultId] = useState('');
   const [consultResult, setConsultResult] = useState<NfseDetalhe | null>(null);
 
@@ -97,12 +99,21 @@ export default function Nfse() {
   }
 
   async function handleListar() {
-    if (!listCpfCnpj) { setErrorMsg('Informe o CPF/CNPJ'); setViewState('error'); return; }
+    if (!listCnpj) { setErrorMsg('Informe o CPF/CNPJ'); setViewState('error'); return; }
     clearMessages(); setViewState('loading');
     try {
-      const res = await nfseAPI.listar(listCpfCnpj, ambiente);
+      const res = await nfseAPI.listar(listCnpj, ambiente);
       setListResult(res.data ?? []); setViewState('success');
     } catch (e) { setErrorMsg(extractError(e)); setViewState('error'); }
+  }
+
+  async function handleVerDetalhes(item: NfseListagemItem) {
+    setDetailLoading(true);
+    try {
+      const res = await nfseAPI.consultar(item.id, ambiente);
+      setDetailTarget(res);
+    } catch (e) { setErrorMsg(extractError(e)); setViewState('error'); }
+    finally { setDetailLoading(false); }
   }
 
   async function handleConsultar() {
@@ -236,7 +247,7 @@ export default function Nfse() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-zinc-400 mb-2">CPF/CNPJ do prestador</label>
-                <input className="input font-mono text-sm" placeholder="00000000000000" value={listCpfCnpj} onChange={e => setListCpfCnpj(e.target.value)} />
+                <input className="input font-mono text-sm" placeholder="00000000000000" value={listCnpj} onChange={e => setListCpfCnpj(e.target.value)} />
               </div>
               <button className="btn-primary" onClick={handleListar} disabled={viewState === 'loading'}>
                 {viewState === 'loading' ? <Loader className="w-4 h-4 animate-spin" /> : 'Listar'}
@@ -252,12 +263,88 @@ export default function Nfse() {
                       <p className="text-xs text-zinc-500">ID: {item.id}</p>
                       {item.codigo_verificacao && <p className="text-xs text-zinc-500">Codigo: {item.codigo_verificacao}</p>}
                       <p className="text-xs text-zinc-500">Emissao: {item.data_emissao ? new Date(item.data_emissao).toLocaleString('pt-BR') : '-'}</p>
+                      <button onClick={() => handleVerDetalhes(item)} disabled={detailLoading}
+                        className="flex items-center gap-1 mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50">
+                        <Eye className="w-3 h-3" /> Detalhes
+                      </button>
                     </div>
                   ))}
                 </div>
               )}
               {listResult.length === 0 && viewState === 'success' && (
                 <p className="text-sm text-zinc-500">Nenhuma NFS-e encontrada</p>
+              )}
+
+              {/* Detalhes Modal */}
+              {detailTarget && (
+                <div className="modal-overlay" onClick={() => setDetailTarget(null)}>
+                  <div className="modal-content max-w-2xl" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-lg font-semibold text-white">Detalhes NFS-e N {detailTarget.numero}</h2>
+                      <button onClick={() => setDetailTarget(null)} className="p-1 hover:bg-zinc-800 rounded-lg transition-colors text-zinc-500">
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between border-b border-zinc-800 pb-2">
+                        <span className="text-zinc-500">ID</span>
+                        <span className="text-zinc-100 font-mono">{detailTarget.id}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-zinc-800 pb-2">
+                        <span className="text-zinc-500">Numero</span>
+                        <span className="text-zinc-100 font-medium">{detailTarget.numero}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-zinc-800 pb-2">
+                        <span className="text-zinc-500">Status</span>
+                        <StatusBadge status={detailTarget.status} />
+                      </div>
+                      <div className="flex justify-between border-b border-zinc-800 pb-2">
+                        <span className="text-zinc-500">Codigo verificacao</span>
+                        <span className="text-zinc-100 font-mono">{detailTarget.codigo_verificacao}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-zinc-800 pb-2">
+                        <span className="text-zinc-500">Ambiente</span>
+                        <span className="text-zinc-100">{detailTarget.ambiente === 'producao' ? 'Producao' : 'Homologacao'}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-zinc-800 pb-2">
+                        <span className="text-zinc-500">Referencia</span>
+                        <span className="text-zinc-100 font-mono">{detailTarget.referencia || '-'}</span>
+                      </div>
+                      <div className="flex justify-between border-b border-zinc-800 pb-2">
+                        <span className="text-zinc-500">Data emissao</span>
+                        <span className="text-zinc-100">{detailTarget.data_emissao ? new Date(detailTarget.data_emissao).toLocaleString('pt-BR') : '-'}</span>
+                      </div>
+                      {detailTarget.DPS && (
+                        <div className="flex justify-between border-b border-zinc-800 pb-2">
+                          <span className="text-zinc-500">DPS</span>
+                          <span className="text-zinc-100 font-mono">Serie {detailTarget.DPS.serie}, nDPS {detailTarget.DPS.nDPS}</span>
+                        </div>
+                      )}
+                      {detailTarget.link_url && (
+                        <div className="flex justify-between border-b border-zinc-800 pb-2">
+                          <span className="text-zinc-500">Link</span>
+                          <a href={detailTarget.link_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline truncate max-w-xs">{detailTarget.link_url}</a>
+                        </div>
+                      )}
+                      {detailTarget.declaracao_prestacao_servico && (
+                        <div className="border-b border-zinc-800 pb-2">
+                          <span className="text-zinc-500 block mb-1">Declaracao Prestacao Servico</span>
+                          <pre className="text-xs text-zinc-300 bg-zinc-900 rounded p-2 overflow-auto max-h-40">
+                            {JSON.stringify(detailTarget.declaracao_prestacao_servico, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                      {detailTarget.cancelamento && (
+                        <div className="border-b border-zinc-800 pb-2">
+                          <span className="text-zinc-500 block mb-1">Cancelamento</span>
+                          <pre className="text-xs text-zinc-300 bg-zinc-900 rounded p-2 overflow-auto max-h-40">
+                            {JSON.stringify(detailTarget.cancelamento, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           )}
