@@ -196,8 +196,7 @@ export default function Nfse() {
       )}
 
       {/* Content */}
-      {viewState !== 'loading' && (
-        <div className="card">
+      <div className="card" style={{ display: viewState === 'loading' ? 'none' : undefined }}>
           {activeTab === 'credenciais' && (
             <div className="space-y-4">
               <p className="text-sm text-zinc-500">Obtenha suas credenciais no console da ACBr API.</p>
@@ -353,7 +352,6 @@ export default function Nfse() {
             </div>
           )}
         </div>
-      )}
     </div>
   );
 }
