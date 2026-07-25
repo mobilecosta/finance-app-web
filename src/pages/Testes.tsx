@@ -258,19 +258,28 @@ export default function Testes() {
         )}
 
         {/* Pagination */}
-        <div className="px-6 py-4 border-t border-zinc-800 flex justify-between items-center">
+        <div className="px-6 py-4 border-t border-zinc-800 flex items-center justify-between gap-4">
           <button
-            onClick={() => setPage(Math.max(1, page - 1))}
+            onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded disabled:opacity-50 transition-colors"
+            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded disabled:opacity-50 transition-colors text-sm"
           >
             Anterior
           </button>
-          <span className="text-zinc-400">Página {page}</span>
+          <div className="flex items-center gap-2 text-sm text-zinc-400">
+            <span>Página</span>
+            <input
+              type="number"
+              min={1}
+              value={page}
+              onChange={e => { const v = parseInt(e.target.value); if (v >= 1) setPage(v); }}
+              className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-center text-white focus:outline-none focus:border-zinc-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+          </div>
           <button
-            onClick={() => setPage(page + 1)}
+            onClick={() => setPage(p => p + 1)}
             disabled={!hasNext}
-            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded disabled:opacity-50 transition-colors"
+            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded disabled:opacity-50 transition-colors text-sm"
           >
             Próxima
           </button>
