@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, RotateCcw, CheckCircle, XCircle, Clock, Zap } from 'lucide-react';
+import { Play, CheckCircle, XCircle, Clock, Zap } from 'lucide-react';
 
 interface Test {
   id: number;
