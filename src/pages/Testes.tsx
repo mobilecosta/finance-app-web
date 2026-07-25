@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Play, CheckCircle, XCircle, Clock, Zap, AlertCircle } from 'lucide-react';
+import { Play, CheckCircle, XCircle, Clock, Zap, AlertCircle, Eye, X } from 'lucide-react';
 import api from '../services/api';
 
 interface Test {
@@ -40,6 +40,7 @@ export default function Testes() {
   const [hasNext, setHasNext] = useState(false);
   const [runMessage, setRunMessage] = useState('');
   const [runError, setRunError] = useState('');
+  const [viewTarget, setViewTarget] = useState<{ id: number; name: string; html: string } | null>(null);
 
   // Buscar testes ao carregar
   useEffect(() => {
@@ -99,17 +100,15 @@ export default function Testes() {
     }
   };
 
-  const runSingleTest = async (testId: number) => {
+  const handleViewReport = async (testId: number) => {
     try {
-      const res = await api.post(`/tests/${testId}/run`);
-      const data = res.data;
-      setTests(tests.map(t =>
-        t.id === testId
-          ? { ...t, status: data.status || 'passed', duration: data.duration || t.duration }
-          : t
-      ));
+      const res = await api.get(`/tests/${testId}`);
+      const html = res.data?.reportHtml;
+      if (html) {
+        setViewTarget({ id: testId, name: res.data?.date ? `Teste #${testId} - ${res.data.date}` : `Teste #${testId}`, html });
+      }
     } catch (error) {
-      console.error('Erro ao executar teste:', error);
+      console.error('Erro ao buscar relatório:', error);
     }
   };
 
@@ -244,11 +243,11 @@ export default function Testes() {
                     </td>
                     <td className="px-6 py-4">
                       <button
-                        onClick={() => runSingleTest(test.id)}
+                        onClick={() => handleViewReport(test.id)}
                         className="flex items-center gap-1 px-3 py-1 text-sm bg-zinc-800 hover:bg-zinc-700 text-white rounded transition-colors"
                       >
-                        <Play className="w-4 h-4" />
-                        Executar
+                        <Eye className="w-4 h-4" />
+                        Visualizar
                       </button>
                     </td>
                   </tr>
@@ -277,6 +276,28 @@ export default function Testes() {
           </button>
         </div>
       </div>
+
+      {/* View Report Modal */}
+      {viewTarget && (
+        <div className="modal-overlay" onClick={() => setViewTarget(null)}>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()} style={{animation: 'slideUp 0.2s ease-out'}}>
+            <div className="flex items-center justify-between p-4 border-b border-zinc-800">
+              <h2 className="text-lg font-semibold text-white">{viewTarget.name}</h2>
+              <button onClick={() => setViewTarget(null)} className="p-1 hover:bg-zinc-800 rounded-lg transition-colors text-zinc-500">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-4 bg-white rounded-b-xl">
+              <iframe
+                srcDoc={viewTarget.html}
+                title="Relatório de Testes"
+                className="w-full h-full border-0"
+                style={{ minHeight: '70vh' }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Coverage Details */}
       {stats && (
