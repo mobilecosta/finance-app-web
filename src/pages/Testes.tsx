@@ -86,11 +86,17 @@ export default function Testes() {
   const runAllTests = async () => {
     try {
       setRunning(true); setRunMessage(''); setRunError('');
-      const res = await api.post('/tests/run-all');
-      if (res.data?.success) {
-        setRunMessage(res.data.message || 'Testes executados com sucesso');
+      const res = await api.post('/acbr-tests/run');
+      const data = res.data;
+      if (data?.success) {
+        const s = data.summary;
+        const suitesOk = s.suites.filter((su: any) => su.failed === 0).length;
+        setRunMessage(`ACBr: ${s.passed}/${s.total} testes passaram (${suitesOk}/${s.suites.length} suítes) — ${s.durationMs}ms`);
+        if (data.reportHtml) {
+          setViewTarget({ id: 0, name: `ACBr Tests - ${new Date(data.timestamp).toLocaleString('pt-BR')}`, html: data.reportHtml });
+        }
       } else {
-        setRunError(res.data?.error || 'Erro ao executar testes');
+        setRunError(data?.error || 'Erro ao executar testes ACBr');
       }
       await fetchTests();
     } catch (error: any) {
