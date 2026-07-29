@@ -58,6 +58,7 @@ export default function Nfse() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [consultId, setConsultId] = useState('');
   const [consultResult, setConsultResult] = useState<NfseDetalhe | null>(null);
+  const [consultError, setConsultError] = useState<{ message: string; responseData?: unknown } | null>(null);
 
   const [emitCnpjPrest, setEmitCnpjPrest] = useState('');
   const [emitCnpjTom, setEmitCnpjTom] = useState('');
@@ -133,11 +134,17 @@ export default function Nfse() {
 
   async function handleConsultar() {
     if (!consultId) { setErrorMsg('Informe o ID da NFS-e'); setViewState('error'); return; }
-    clearMessages(); setViewState('loading');
+    setConsultResult(null); setConsultError(null);
+    setViewState('loading');
     try {
       const res = await nfseAPI.consultar(consultId, ambiente);
-      setConsultResult(res); setViewState('success');
-    } catch (e) { setErrorMsg(extractError(e)); setViewState('error'); }
+      setConsultResult(res); setViewState('idle');
+    } catch (e: unknown) {
+      const msg = extractError(e);
+      const respData = (e as any)?.response?.data || (e as any)?.responseData;
+      setConsultError({ message: msg, responseData: respData });
+      setViewState('idle');
+    }
   }
 
   async function handleEmitir() {
@@ -394,34 +401,111 @@ export default function Nfse() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-zinc-400 mb-2">ID da NFS-e</label>
-                <input className="input font-mono text-sm" placeholder="ID da nota" value={consultId} onChange={e => setConsultId(e.target.value)} />
+                <div className="flex gap-2">
+                  <input className="input font-mono text-sm flex-1" placeholder="ID da nota" value={consultId} onChange={e => { setConsultId(e.target.value); setConsultError(null); }} />
+                  <button className="btn-primary inline-flex items-center gap-2" onClick={handleConsultar} disabled={viewState === 'loading'}>
+                    {viewState === 'loading' ? <Loader className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                    Consultar
+                  </button>
+                </div>
               </div>
-              <button className="btn-primary inline-flex items-center gap-2" onClick={handleConsultar} disabled={viewState === 'loading'}>
-                {viewState === 'loading' && <Loader className="w-4 h-4 animate-spin" />}
-                Consultar
-              </button>
-              {consultResult && (
-                <div className="card bg-zinc-800/30 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-zinc-500">Número</span>
-                    <span className="text-sm font-medium text-zinc-100">{consultResult.numero}</span>
+
+              {consultError && (
+                <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 space-y-3 animate-scale-in">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-red-300">Erro ao consultar NFS-e</p>
+                      <p className="text-sm text-red-400/80 mt-1 break-words">{consultError.message}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-zinc-500">Status</span>
+                  {consultError.responseData && (
+                    <details className="group">
+                      <summary className="text-xs text-red-400/60 hover:text-red-300 cursor-pointer select-none">
+                        Detalhes da resposta
+                      </summary>
+                      <pre className="mt-2 text-xs text-red-300/80 bg-zinc-900/60 rounded p-3 overflow-auto max-h-48 font-mono">
+                        {typeof consultError.responseData === 'string'
+                          ? consultError.responseData
+                          : JSON.stringify(consultError.responseData, null, 2)}
+                      </pre>
+                    </details>
+                  )}
+                </div>
+              )}
+
+              {consultResult && (
+                <div className="card space-y-0 divide-y divide-zinc-800/60 animate-scale-in">
+                  <div className="flex items-center justify-between pb-3">
+                    <h3 className="text-base font-semibold text-white">
+                      NFS-e {consultResult.numero ? `N ${consultResult.numero}` : ''}
+                    </h3>
                     <StatusBadge status={consultResult.status} />
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-zinc-500">Código verificação</span>
-                    <span className="text-sm font-mono text-zinc-100">{consultResult.codigo_verificacao}</span>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3">
+                    <div>
+                      <p className="text-xs text-zinc-600 uppercase tracking-wider mb-1">ID</p>
+                      <p className="text-sm font-mono text-zinc-100 break-all">{consultResult.id}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-600 uppercase tracking-wider mb-1">Número</p>
+                      <p className="text-sm font-medium text-zinc-100">{consultResult.numero || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-600 uppercase tracking-wider mb-1">Ambiente</p>
+                      <p className="text-sm text-zinc-100">{consultResult.ambiente === 'producao' ? 'Produção' : 'Homologação'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-600 uppercase tracking-wider mb-1">Código verificação</p>
+                      <p className="text-sm font-mono text-zinc-100">{consultResult.codigo_verificacao || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-600 uppercase tracking-wider mb-1">Referência</p>
+                      <p className="text-sm font-mono text-zinc-100">{consultResult.referencia || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-600 uppercase tracking-wider mb-1">Data emissão</p>
+                      <p className="text-sm text-zinc-100">{consultResult.data_emissao ? new Date(consultResult.data_emissao).toLocaleString('pt-BR') : '-'}</p>
+                    </div>
+                    {consultResult.DPS && (
+                      <div>
+                        <p className="text-xs text-zinc-600 uppercase tracking-wider mb-1">DPS</p>
+                        <p className="text-sm font-mono text-zinc-100">Série {consultResult.DPS.serie}, nDPS {consultResult.DPS.nDPS}</p>
+                      </div>
+                    )}
+                    {consultResult.link_url && (
+                      <div className="sm:col-span-2">
+                        <p className="text-xs text-zinc-600 uppercase tracking-wider mb-1">Link</p>
+                        <a href={consultResult.link_url} target="_blank" rel="noopener noreferrer"
+                          className="text-sm text-blue-400 hover:text-blue-300 hover:underline break-all">
+                          {consultResult.link_url}
+                        </a>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-zinc-500">Link</span>
-                    <a href={consultResult.link_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline truncate max-w-xs">{consultResult.link_url}</a>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-zinc-500">Emissão</span>
-                    <span className="text-sm text-zinc-100">{consultResult.data_emissao ? new Date(consultResult.data_emissao).toLocaleString('pt-BR') : '-'}</span>
-                  </div>
+
+                  {consultResult.declaracao_prestacao_servico && (
+                    <details className="group pt-3">
+                      <summary className="text-xs text-zinc-500 hover:text-zinc-300 cursor-pointer select-none">
+                        Declaração de Prestação de Serviço
+                      </summary>
+                      <pre className="mt-2 text-xs text-zinc-300 bg-zinc-900/60 rounded p-3 overflow-auto max-h-48 font-mono">
+                        {JSON.stringify(consultResult.declaracao_prestacao_servico, null, 2)}
+                      </pre>
+                    </details>
+                  )}
+
+                  {consultResult.cancelamento && (
+                    <details className="group pt-3">
+                      <summary className="text-xs text-zinc-500 hover:text-zinc-300 cursor-pointer select-none">
+                        Cancelamento
+                      </summary>
+                      <pre className="mt-2 text-xs text-zinc-300 bg-zinc-900/60 rounded p-3 overflow-auto max-h-48 font-mono">
+                        {JSON.stringify(consultResult.cancelamento, null, 2)}
+                      </pre>
+                    </details>
+                  )}
                 </div>
               )}
             </div>
