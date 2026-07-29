@@ -54,6 +54,7 @@ export default function Nfse() {
   const [listPage, setListPage] = useState(1);
   const [listTotal, setListTotal] = useState(0);
   const listPageSize = 10;
+  const [listPageInput, setListPageInput] = useState('');
   const [detailTarget, setDetailTarget] = useState<NfseDetalhe | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [consultId, setConsultId] = useState('');
@@ -113,8 +114,17 @@ export default function Nfse() {
       setListResult(res.data ?? []);
       setListTotal(res['@count'] ?? 0);
       setListPage(page);
+      setListPageInput(String(page));
       setViewState('success');
     } catch (e) { setErrorMsg(extractError(e)); setViewState('error'); }
+  }
+
+  function handleGoToPage() {
+    const p = parseInt(listPageInput, 10);
+    if (isNaN(p) || p < 1) return;
+    const totalPages = listTotal > 0 ? Math.ceil(listTotal / listPageSize) : 0;
+    if (totalPages > 0 && p > totalPages) return;
+    fetchListPage(p);
   }
 
   async function handleListar() {
@@ -303,22 +313,50 @@ export default function Nfse() {
               )}
 
               {/* Pagination */}
-              {listResult.length > 0 && (
-                <div className="flex items-center justify-between pt-2">
-                  <p className="text-sm text-zinc-500">
-                    {listTotal > 0
-                      ? `Página ${listPage} (${(listPage - 1) * listPageSize + 1}-${Math.min(listPage * listPageSize, listTotal)} de ${listTotal})`
-                      : `Página ${listPage}`}
-                  </p>
-                  <div className="flex gap-2">
-                    <button onClick={() => fetchListPage(listPage - 1)} disabled={listPage === 1 || viewState === 'loading'}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-zinc-400 hover:text-white hover:bg-zinc-800">
-                      <ChevronLeft className="w-4 h-4" /> Anterior
-                    </button>
-                    <button onClick={() => fetchListPage(listPage + 1)} disabled={listPage * listPageSize >= (listTotal || Infinity) || viewState === 'loading'}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-zinc-400 hover:text-white hover:bg-zinc-800">
-                      Próximo <ChevronRight className="w-4 h-4" />
-                    </button>
+              {listResult.length > 0 && listTotal > 0 && (
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <p className="text-zinc-500">
+                      <span className="text-zinc-400 font-medium">{listTotal}</span> registro{listTotal !== 1 ? 's' : ''} encontrado{listTotal !== 1 ? 's' : ''}
+                    </p>
+                    <p className="text-zinc-500">
+                      {listPage > 1 && (
+                        <span className="text-zinc-600">{(listPage - 1) * listPageSize} anteriores · </span>
+                      )}
+                      <span className="text-zinc-300 font-medium">
+                        {((listPage - 1) * listPageSize) + 1}&ndash;{Math.min(listPage * listPageSize, listTotal)}
+                      </span>
+                      {listPage * listPageSize < listTotal && (
+                        <span className="text-zinc-600"> · {listTotal - listPage * listPageSize} restantes</span>
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex gap-2">
+                      <button onClick={() => fetchListPage(listPage - 1)} disabled={listPage === 1 || viewState === 'loading'}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-zinc-400 hover:text-white hover:bg-zinc-800">
+                        <ChevronLeft className="w-4 h-4" /> Anterior
+                      </button>
+                      <button onClick={() => fetchListPage(listPage + 1)} disabled={listPage * listPageSize >= listTotal || viewState === 'loading'}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-zinc-400 hover:text-white hover:bg-zinc-800">
+                        Próximo <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-zinc-600">Ir para página</span>
+                      <input type="number" min={1} max={Math.ceil(listTotal / listPageSize)}
+                        value={listPageInput}
+                        onChange={e => setListPageInput(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && handleGoToPage()}
+                        className="w-16 px-2 py-1.5 rounded-lg bg-zinc-800/60 border border-zinc-700/50 text-sm text-zinc-100 font-mono text-center focus:outline-none focus:border-zinc-500 transition-colors [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      />
+                      <button onClick={handleGoToPage} disabled={viewState === 'loading'}
+                        className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed">
+                        Ir
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
