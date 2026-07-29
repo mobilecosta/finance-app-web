@@ -42,7 +42,6 @@ export default function Testes() {
   const [runError, setRunError] = useState('');
   const [viewTarget, setViewTarget] = useState<{ id: number; name: string; html: string } | null>(null);
 
-  // Buscar testes ao carregar
   useEffect(() => {
     fetchTests();
   }, [page]);
@@ -120,43 +119,43 @@ export default function Testes() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'passed':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'failed':
-        return <XCircle className="w-5 h-5 text-red-500" />;
-      case 'running':
-        return <Zap className="w-5 h-5 text-yellow-500 animate-spin" />;
-      default:
-        return <Clock className="w-5 h-5 text-gray-500" />;
+      case 'passed': return <CheckCircle className="w-5 h-5 text-emerald-400" />;
+      case 'failed': return <XCircle className="w-5 h-5 text-red-400" />;
+      case 'running': return <Zap className="w-5 h-5 text-amber-400 animate-pulse" />;
+      default: return <Clock className="w-5 h-5 text-zinc-500" />;
     }
   };
 
   const getStatusBadge = (status: string) => {
-    const baseClasses = 'px-2 py-1 rounded text-xs font-medium';
     switch (status) {
-      case 'passed':
-        return `${baseClasses} bg-green-100 text-green-800`;
-      case 'failed':
-        return `${baseClasses} bg-red-100 text-red-800`;
-      case 'running':
-        return `${baseClasses} bg-yellow-100 text-yellow-800`;
-      default:
-        return `${baseClasses} bg-gray-100 text-gray-800`;
+      case 'passed': return 'badge-success';
+      case 'failed': return 'badge-error';
+      case 'running': return 'badge-warning';
+      default: return 'badge-neutral';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'passed': return 'Passou';
+      case 'failed': return 'Falhou';
+      case 'running': return 'Executando';
+      default: return 'Pendente';
     }
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">Testes</h1>
-          <p className="text-gray-400 mt-1">Gerenciador de testes unitários e integração</p>
+          <h1 className="text-3xl font-bold text-white mb-1">Testes</h1>
+          <p className="text-zinc-500">Gerenciador de testes unitários e integração</p>
         </div>
         <button
           onClick={runAllTests}
           disabled={running}
-          className="flex items-center gap-2 px-4 py-2 bg-white text-black rounded-lg hover:bg-gray-100 disabled:opacity-50 transition-colors font-medium"
+          className="btn-primary flex items-center gap-2"
         >
           <Play className="w-4 h-4" />
           {running ? 'Executando...' : 'Executar Todos'}
@@ -178,117 +177,113 @@ export default function Testes() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <p className="text-zinc-400 text-sm">Total de Testes</p>
-            <p className="text-2xl font-bold text-white mt-2">{stats.totalTests}</p>
+          <div className="card">
+            <p className="text-zinc-500 text-xs mb-1 uppercase tracking-wider font-medium">Total</p>
+            <p className="text-2xl font-bold text-white mt-1">{stats.totalTests}</p>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <p className="text-zinc-400 text-sm">Passou</p>
-            <p className="text-2xl font-bold text-green-500 mt-2">{stats.passed}</p>
+          <div className="card">
+            <p className="text-zinc-500 text-xs mb-1 uppercase tracking-wider font-medium">Passou</p>
+            <p className="text-2xl font-bold text-emerald-400 mt-1">{stats.passed}</p>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <p className="text-zinc-400 text-sm">Falhou</p>
-            <p className="text-2xl font-bold text-red-500 mt-2">{stats.failed}</p>
+          <div className="card">
+            <p className="text-zinc-500 text-xs mb-1 uppercase tracking-wider font-medium">Falhou</p>
+            <p className="text-2xl font-bold text-red-400 mt-1">{stats.failed}</p>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <p className="text-zinc-400 text-sm">Taxa de Sucesso</p>
-            <p className="text-2xl font-bold text-blue-500 mt-2">{stats.passRate}%</p>
+          <div className="card">
+            <p className="text-zinc-500 text-xs mb-1 uppercase tracking-wider font-medium">Sucesso</p>
+            <p className="text-2xl font-bold text-blue-400 mt-1">{stats.passRate}%</p>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <p className="text-zinc-400 text-sm">Cobertura</p>
-            <p className="text-2xl font-bold text-purple-500 mt-2">{stats.coverage.lines}%</p>
+          <div className="card">
+            <p className="text-zinc-500 text-xs mb-1 uppercase tracking-wider font-medium">Cobertura</p>
+            <p className="text-2xl font-bold text-purple-400 mt-1">{stats.coverage.lines}%</p>
           </div>
         </div>
       )}
 
       {/* Tests Table */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-        <div className="p-6 border-b border-zinc-800">
-          <h2 className="text-lg font-bold text-white">Resultados dos Testes</h2>
+      <div className="card overflow-x-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-white">Resultados dos Testes</h2>
         </div>
 
         {loading ? (
-          <div className="p-8 text-center">
-            <p className="text-zinc-400">Carregando testes...</p>
-          </div>
+          <div className="text-center py-12 text-zinc-500 text-sm">Carregando testes...</div>
         ) : tests.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-zinc-400">Nenhum teste encontrado</p>
-          </div>
+          <div className="text-center py-12 text-zinc-500 text-sm">Nenhum teste encontrado</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-zinc-800 border-b border-zinc-700">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase">Nome</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase">Descrição</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase">Duração</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-zinc-300 uppercase">Ações</th>
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-zinc-800">
+                <th className="text-left py-3 px-4 text-zinc-500 font-medium text-xs uppercase tracking-wider">Status</th>
+                <th className="text-left py-3 px-4 text-zinc-500 font-medium text-xs uppercase tracking-wider">Nome</th>
+                <th className="text-left py-3 px-4 text-zinc-500 font-medium text-xs uppercase tracking-wider">Descrição</th>
+                <th className="text-left py-3 px-4 text-zinc-500 font-medium text-xs uppercase tracking-wider">Duração</th>
+                <th className="text-right py-3 px-4 text-zinc-500 font-medium text-xs uppercase tracking-wider">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tests.map((test) => (
+                <tr key={test.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/50 transition-colors">
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(test.status)}
+                      <span className={`badge ${getStatusBadge(test.status)}`}>
+                        {getStatusLabel(test.status)}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="py-3 px-4">
+                    <p className="text-zinc-100 text-sm font-medium">{test.name}</p>
+                  </td>
+                  <td className="py-3 px-4">
+                    <p className="text-zinc-400 text-sm">{test.description}</p>
+                  </td>
+                  <td className="py-3 px-4">
+                    <p className="text-zinc-400 text-sm">{test.duration}ms</p>
+                  </td>
+                  <td className="py-3 px-4 text-right">
+                    <button
+                      onClick={() => handleViewReport(test.id)}
+                      className="btn-ghost inline-flex items-center gap-1 px-2 py-1 text-xs"
+                    >
+                      <Eye className="w-3 h-3" />
+                      Visualizar
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800">
-                {tests.map((test) => (
-                  <tr key={test.id} className="hover:bg-zinc-800 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        {getStatusIcon(test.status)}
-                        <span className={getStatusBadge(test.status)}>
-                          {test.status === 'passed' ? 'Passou' : test.status === 'failed' ? 'Falhou' : 'Pendente'}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-white font-medium">{test.name}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-zinc-400 text-sm">{test.description}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <p className="text-zinc-300 text-sm">{test.duration}ms</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <button
-                        onClick={() => handleViewReport(test.id)}
-                        className="flex items-center gap-1 px-3 py-1 text-sm bg-zinc-800 hover:bg-zinc-700 text-white rounded transition-colors"
-                      >
-                        <Eye className="w-4 h-4" />
-                        Visualizar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
         )}
 
         {/* Pagination */}
-        <div className="px-6 py-4 border-t border-zinc-800 flex items-center justify-between gap-4">
-          <button
-            onClick={() => setPage(p => Math.max(1, p - 1))}
-            disabled={page === 1}
-            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded disabled:opacity-50 transition-colors text-sm"
-          >
-            Anterior
-          </button>
-          <div className="flex items-center gap-2 text-sm text-zinc-400">
-            <span>Página</span>
-            <input
-              type="number"
-              min={1}
-              value={page}
-              onChange={e => { const v = parseInt(e.target.value); if (v >= 1) setPage(v); }}
-              className="w-16 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-center text-white focus:outline-none focus:border-zinc-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-            />
+        <div className="flex items-center justify-between pt-4 border-t border-zinc-800 mt-4">
+          <p className="text-sm text-zinc-500">Página {page}</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-zinc-400 hover:text-white hover:bg-zinc-800"
+            >
+              Anterior
+            </button>
+            <div className="flex items-center gap-2 text-sm text-zinc-500">
+              <input
+                type="number"
+                min={1}
+                value={page}
+                onChange={e => { const v = parseInt(e.target.value); if (v >= 1) setPage(v); }}
+                className="w-14 px-2 py-1 bg-zinc-800 border border-zinc-700 rounded text-center text-white text-sm focus:outline-none focus:border-zinc-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              />
+            </div>
+            <button
+              onClick={() => setPage(p => p + 1)}
+              disabled={!hasNext}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-zinc-400 hover:text-white hover:bg-zinc-800"
+            >
+              Próximo
+            </button>
           </div>
-          <button
-            onClick={() => setPage(p => p + 1)}
-            disabled={!hasNext}
-            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded disabled:opacity-50 transition-colors text-sm"
-          >
-            Próxima
-          </button>
         </div>
       </div>
 
@@ -316,48 +311,36 @@ export default function Testes() {
 
       {/* Coverage Details */}
       {stats && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
-          <h2 className="text-lg font-bold text-white mb-4">Cobertura de Código</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="card">
+          <h2 className="text-lg font-semibold text-white mb-4">Cobertura de Código</h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div>
-              <p className="text-zinc-400 text-sm mb-2">Linhas</p>
+              <p className="text-zinc-500 text-xs mb-2 uppercase tracking-wider font-medium">Linhas</p>
               <div className="w-full bg-zinc-800 rounded-full h-2">
-                <div
-                  className="bg-green-500 h-2 rounded-full"
-                  style={{ width: `${stats.coverage.lines}%` }}
-                ></div>
+                <div className="bg-emerald-500 h-2 rounded-full transition-all duration-500" style={{ width: `${stats.coverage.lines}%` }} />
               </div>
-              <p className="text-white font-medium mt-2">{stats.coverage.lines}%</p>
+              <p className="text-white font-medium mt-1 text-sm">{stats.coverage.lines}%</p>
             </div>
             <div>
-              <p className="text-zinc-400 text-sm mb-2">Branches</p>
+              <p className="text-zinc-500 text-xs mb-2 uppercase tracking-wider font-medium">Branches</p>
               <div className="w-full bg-zinc-800 rounded-full h-2">
-                <div
-                  className="bg-blue-500 h-2 rounded-full"
-                  style={{ width: `${stats.coverage.branches}%` }}
-                ></div>
+                <div className="bg-blue-500 h-2 rounded-full transition-all duration-500" style={{ width: `${stats.coverage.branches}%` }} />
               </div>
-              <p className="text-white font-medium mt-2">{stats.coverage.branches}%</p>
+              <p className="text-white font-medium mt-1 text-sm">{stats.coverage.branches}%</p>
             </div>
             <div>
-              <p className="text-zinc-400 text-sm mb-2">Funções</p>
+              <p className="text-zinc-500 text-xs mb-2 uppercase tracking-wider font-medium">Funções</p>
               <div className="w-full bg-zinc-800 rounded-full h-2">
-                <div
-                  className="bg-purple-500 h-2 rounded-full"
-                  style={{ width: `${stats.coverage.functions}%` }}
-                ></div>
+                <div className="bg-purple-500 h-2 rounded-full transition-all duration-500" style={{ width: `${stats.coverage.functions}%` }} />
               </div>
-              <p className="text-white font-medium mt-2">{stats.coverage.functions}%</p>
+              <p className="text-white font-medium mt-1 text-sm">{stats.coverage.functions}%</p>
             </div>
             <div>
-              <p className="text-zinc-400 text-sm mb-2">Statements</p>
+              <p className="text-zinc-500 text-xs mb-2 uppercase tracking-wider font-medium">Statements</p>
               <div className="w-full bg-zinc-800 rounded-full h-2">
-                <div
-                  className="bg-yellow-500 h-2 rounded-full"
-                  style={{ width: `${stats.coverage.statements}%` }}
-                ></div>
+                <div className="bg-amber-500 h-2 rounded-full transition-all duration-500" style={{ width: `${stats.coverage.statements}%` }} />
               </div>
-              <p className="text-white font-medium mt-2">{stats.coverage.statements}%</p>
+              <p className="text-white font-medium mt-1 text-sm">{stats.coverage.statements}%</p>
             </div>
           </div>
         </div>

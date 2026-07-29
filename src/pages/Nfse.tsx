@@ -13,18 +13,21 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 function StatusBadge({ status }: { status: string }) {
-  const colors: Record<string, string> = {
-    processando: 'bg-amber-500/15 text-amber-400 border-amber-500/20',
-    autorizado: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/20',
-    cancelado: 'bg-red-500/15 text-red-400 border-red-500/20',
-    rejeitado: 'bg-red-500/15 text-red-400 border-red-500/20',
-    novo: 'bg-blue-500/15 text-blue-400 border-blue-500/20',
+  const badgeClass: Record<string, string> = {
+    processando: 'badge-warning',
+    autorizado: 'badge-success',
+    cancelado: 'badge-error',
+    rejeitado: 'badge-error',
+    novo: 'badge-info',
   };
-  return (
-    <span className={`px-2 py-0.5 rounded text-xs font-medium border ${colors[status] ?? 'bg-zinc-700/50 text-zinc-400 border-zinc-700'}`}>
-      {status}
-    </span>
-  );
+  const label: Record<string, string> = {
+    processando: 'Processando',
+    autorizado: 'Autorizado',
+    cancelado: 'Cancelado',
+    rejeitado: 'Rejeitado',
+    novo: 'Novo',
+  };
+  return <span className={`badge ${badgeClass[status] ?? 'badge-neutral'}`}>{label[status] ?? status}</span>;
 }
 
 type ViewState = 'idle' | 'loading' | 'error' | 'success';
@@ -257,26 +260,31 @@ export default function Nfse() {
 
           {activeTab === 'listar' && (
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">CPF/CNPJ do prestador</label>
-                <input className="input font-mono text-sm" placeholder="00000000000000" value={listCnpj} onChange={e => setListCnpj(e.target.value)} />
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-zinc-400 mb-2">CPF/CNPJ do prestador</label>
+                  <input className="input font-mono text-sm" placeholder="00000000000000" value={listCnpj} onChange={e => setListCnpj(e.target.value)} />
+                </div>
               </div>
-              <button className="btn-primary" onClick={handleListar} disabled={viewState === 'loading'}>
-                {viewState === 'loading' ? <Loader className="w-4 h-4 animate-spin" /> : 'Listar'}
+              <button className="btn-primary inline-flex items-center gap-2" onClick={handleListar} disabled={viewState === 'loading'}>
+                {viewState === 'loading' && <Loader className="w-4 h-4 animate-spin" />}
+                Listar NFS-e
               </button>
               {listResult.length > 0 && (
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {listResult.map(item => (
-                    <div key={item.id} className="bg-zinc-800/50 border border-zinc-800 rounded-lg p-4 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-zinc-100">N {item.numero}</span>
+                    <div key={item.id} className="card-hover">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-semibold text-zinc-100">N {item.numero}</span>
                         <StatusBadge status={item.status} />
                       </div>
-                      <p className="text-xs text-zinc-500">ID: {item.id}</p>
-                      {item.codigo_verificacao && <p className="text-xs text-zinc-500">Codigo: {item.codigo_verificacao}</p>}
-                      <p className="text-xs text-zinc-500">Emissao: {item.data_emissao ? new Date(item.data_emissao).toLocaleString('pt-BR') : '-'}</p>
+                      <div className="space-y-1 text-xs text-zinc-500">
+                        <p>ID: <span className="font-mono text-zinc-400">{item.id}</span></p>
+                        {item.codigo_verificacao && <p>Código: <span className="font-mono text-zinc-400">{item.codigo_verificacao}</span></p>}
+                        <p>Emissão: {item.data_emissao ? new Date(item.data_emissao).toLocaleString('pt-BR') : '-'}</p>
+                      </div>
                       <button onClick={() => handleVerDetalhes(item)} disabled={detailLoading}
-                        className="flex items-center gap-1 mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50">
+                        className="flex items-center gap-1 mt-3 text-xs text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50">
                         <Eye className="w-3 h-3" /> Detalhes
                       </button>
                     </div>
@@ -292,8 +300,8 @@ export default function Nfse() {
                 <div className="flex items-center justify-between pt-2">
                   <p className="text-sm text-zinc-500">
                     {listTotal > 0
-                      ? `Pagina ${listPage} (${(listPage - 1) * listPageSize + 1}-${Math.min(listPage * listPageSize, listTotal)} de ${listTotal})`
-                      : `Pagina ${listPage}`}
+                      ? `Página ${listPage} (${(listPage - 1) * listPageSize + 1}-${Math.min(listPage * listPageSize, listTotal)} de ${listTotal})`
+                      : `Página ${listPage}`}
                   </p>
                   <div className="flex gap-2">
                     <button onClick={() => fetchListPage(listPage - 1)} disabled={listPage === 1 || viewState === 'loading'}
@@ -302,7 +310,7 @@ export default function Nfse() {
                     </button>
                     <button onClick={() => fetchListPage(listPage + 1)} disabled={listPage * listPageSize >= (listTotal || Infinity) || viewState === 'loading'}
                       className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-zinc-400 hover:text-white hover:bg-zinc-800">
-                      Proximo <ChevronRight className="w-4 h-4" />
+                      Próximo <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
@@ -324,7 +332,7 @@ export default function Nfse() {
                         <span className="text-zinc-100 font-mono">{detailTarget.id}</span>
                       </div>
                       <div className="flex justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-zinc-500">Numero</span>
+                        <span className="text-zinc-500">Número</span>
                         <span className="text-zinc-100 font-medium">{detailTarget.numero}</span>
                       </div>
                       <div className="flex justify-between border-b border-zinc-800 pb-2">
@@ -332,25 +340,25 @@ export default function Nfse() {
                         <StatusBadge status={detailTarget.status} />
                       </div>
                       <div className="flex justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-zinc-500">Codigo verificacao</span>
+                        <span className="text-zinc-500">Código verificação</span>
                         <span className="text-zinc-100 font-mono">{detailTarget.codigo_verificacao}</span>
                       </div>
                       <div className="flex justify-between border-b border-zinc-800 pb-2">
                         <span className="text-zinc-500">Ambiente</span>
-                        <span className="text-zinc-100">{detailTarget.ambiente === 'producao' ? 'Producao' : 'Homologacao'}</span>
+                        <span className="text-zinc-100">{detailTarget.ambiente === 'producao' ? 'Produção' : 'Homologação'}</span>
                       </div>
                       <div className="flex justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-zinc-500">Referencia</span>
+                        <span className="text-zinc-500">Referência</span>
                         <span className="text-zinc-100 font-mono">{detailTarget.referencia || '-'}</span>
                       </div>
                       <div className="flex justify-between border-b border-zinc-800 pb-2">
-                        <span className="text-zinc-500">Data emissao</span>
+                        <span className="text-zinc-500">Data emissão</span>
                         <span className="text-zinc-100">{detailTarget.data_emissao ? new Date(detailTarget.data_emissao).toLocaleString('pt-BR') : '-'}</span>
                       </div>
                       {detailTarget.DPS && (
                         <div className="flex justify-between border-b border-zinc-800 pb-2">
                           <span className="text-zinc-500">DPS</span>
-                          <span className="text-zinc-100 font-mono">Serie {detailTarget.DPS.serie}, nDPS {detailTarget.DPS.nDPS}</span>
+                          <span className="text-zinc-100 font-mono">Série {detailTarget.DPS.serie}, nDPS {detailTarget.DPS.nDPS}</span>
                         </div>
                       )}
                       {detailTarget.link_url && (
@@ -361,8 +369,8 @@ export default function Nfse() {
                       )}
                       {detailTarget.declaracao_prestacao_servico && (
                         <div className="border-b border-zinc-800 pb-2">
-                          <span className="text-zinc-500 block mb-1">Declaracao Prestacao Servico</span>
-                          <pre className="text-xs text-zinc-300 bg-zinc-900 rounded p-2 overflow-auto max-h-40">
+                          <span className="text-zinc-500 block mb-1">Declaração Prestação Serviço</span>
+                          <pre className="text-xs text-zinc-300 bg-zinc-900/80 rounded p-2 overflow-auto max-h-40">
                             {JSON.stringify(detailTarget.declaracao_prestacao_servico, null, 2)}
                           </pre>
                         </div>
@@ -370,7 +378,7 @@ export default function Nfse() {
                       {detailTarget.cancelamento && (
                         <div className="border-b border-zinc-800 pb-2">
                           <span className="text-zinc-500 block mb-1">Cancelamento</span>
-                          <pre className="text-xs text-zinc-300 bg-zinc-900 rounded p-2 overflow-auto max-h-40">
+                          <pre className="text-xs text-zinc-300 bg-zinc-900/80 rounded p-2 overflow-auto max-h-40">
                             {JSON.stringify(detailTarget.cancelamento, null, 2)}
                           </pre>
                         </div>
@@ -388,13 +396,14 @@ export default function Nfse() {
                 <label className="block text-sm font-medium text-zinc-400 mb-2">ID da NFS-e</label>
                 <input className="input font-mono text-sm" placeholder="ID da nota" value={consultId} onChange={e => setConsultId(e.target.value)} />
               </div>
-              <button className="btn-primary" onClick={handleConsultar} disabled={viewState === 'loading'}>
-                {viewState === 'loading' ? <Loader className="w-4 h-4 animate-spin" /> : 'Consultar'}
+              <button className="btn-primary inline-flex items-center gap-2" onClick={handleConsultar} disabled={viewState === 'loading'}>
+                {viewState === 'loading' && <Loader className="w-4 h-4 animate-spin" />}
+                Consultar
               </button>
               {consultResult && (
-                <div className="bg-zinc-800/50 border border-zinc-800 rounded-lg p-4 space-y-3">
+                <div className="card bg-zinc-800/30 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-zinc-500">Numero</span>
+                    <span className="text-sm text-zinc-500">Número</span>
                     <span className="text-sm font-medium text-zinc-100">{consultResult.numero}</span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -402,7 +411,7 @@ export default function Nfse() {
                     <StatusBadge status={consultResult.status} />
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-zinc-500">Codigo verificacao</span>
+                    <span className="text-sm text-zinc-500">Código verificação</span>
                     <span className="text-sm font-mono text-zinc-100">{consultResult.codigo_verificacao}</span>
                   </div>
                   <div className="flex items-center justify-between">
@@ -410,7 +419,7 @@ export default function Nfse() {
                     <a href={consultResult.link_url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-400 hover:underline truncate max-w-xs">{consultResult.link_url}</a>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-zinc-500">Emissao</span>
+                    <span className="text-sm text-zinc-500">Emissão</span>
                     <span className="text-sm text-zinc-100">{consultResult.data_emissao ? new Date(consultResult.data_emissao).toLocaleString('pt-BR') : '-'}</span>
                   </div>
                 </div>
@@ -435,17 +444,18 @@ export default function Nfse() {
                 <label className="block text-sm font-medium text-zinc-400 mb-2">Nome</label>
                 <input className="input text-sm" placeholder="Nome do tomador" value={emitNomeTom} onChange={e => setEmitNomeTom(e.target.value)} />
               </div>
-              <h3 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider">Servico</h3>
+              <h3 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider">Serviço</h3>
               <div>
-                <label className="block text-sm font-medium text-zinc-400 mb-2">Descricao</label>
-                <input className="input text-sm" placeholder="Descricao do servico" value={emitDescServ} onChange={e => setEmitDescServ(e.target.value)} />
+                <label className="block text-sm font-medium text-zinc-400 mb-2">Descrição</label>
+                <input className="input text-sm" placeholder="Descrição do serviço" value={emitDescServ} onChange={e => setEmitDescServ(e.target.value)} />
               </div>
               <div>
                 <label className="block text-sm font-medium text-zinc-400 mb-2">Valor (R$)</label>
                 <input className="input font-mono text-sm" type="number" step="0.01" placeholder="100.00" value={emitValor} onChange={e => setEmitValor(e.target.value)} />
               </div>
-              <button className="btn-primary" onClick={handleEmitir} disabled={viewState === 'loading'}>
-                {viewState === 'loading' ? <Loader className="w-4 h-4 animate-spin" /> : 'Emitir NFS-e'}
+              <button className="btn-primary inline-flex items-center gap-2" onClick={handleEmitir} disabled={viewState === 'loading'}>
+                {viewState === 'loading' && <Loader className="w-4 h-4 animate-spin" />}
+                Emitir NFS-e
               </button>
               {emitResult && (
                 <div className="flex items-center gap-2 text-sm text-emerald-400">
@@ -461,8 +471,9 @@ export default function Nfse() {
                 <label className="block text-sm font-medium text-zinc-400 mb-2">ID da NFS-e</label>
                 <input className="input font-mono text-sm" placeholder="ID da nota a cancelar" value={cancelId} onChange={e => setCancelId(e.target.value)} />
               </div>
-              <button className="px-4 py-2 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors font-medium text-sm" onClick={handleCancelar} disabled={viewState === 'loading'}>
-                {viewState === 'loading' ? <Loader className="w-4 h-4 animate-spin" /> : 'Cancelar NFS-e'}
+              <button className="btn-danger inline-flex items-center gap-2" onClick={handleCancelar} disabled={viewState === 'loading'}>
+                {viewState === 'loading' && <Loader className="w-4 h-4 animate-spin" />}
+                Cancelar NFS-e
               </button>
               {cancelResult && (
                 <div className="flex items-center gap-2 text-sm text-emerald-400">

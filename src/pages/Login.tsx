@@ -46,12 +46,13 @@ export default function Login() {
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-zinc-800/20 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-zinc-800/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/[0.02] rounded-full blur-3xl" />
       </div>
 
       <div className="w-full max-w-md relative z-10">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl mb-4 shadow-lg shadow-white/5">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-white to-zinc-300 rounded-2xl mb-4 shadow-lg shadow-white/10">
             <Wallet className="w-8 h-8 text-black" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Finance Pro</h1>
@@ -59,7 +60,7 @@ export default function Login() {
         </div>
 
         {/* Card */}
-        <div className="bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-2xl p-8 shadow-2xl">
+        <div className="bg-zinc-900/70 backdrop-blur-xl border border-zinc-800 rounded-2xl p-8 shadow-2xl shadow-black/20">
           {/* Tabs */}
           <div className="flex gap-2 mb-6 bg-zinc-800/50 rounded-lg p-1">
             <button

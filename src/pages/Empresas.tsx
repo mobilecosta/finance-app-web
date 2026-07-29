@@ -309,7 +309,7 @@ export default function Empresas() {
       )}
 
       {!loading && activeTab === 'config' && configCnpj && (
-        <div className="card max-w-lg space-y-4">
+        <div className="card max-w-lg space-y-4 animate-scale-in">
           <h2 className="text-lg font-semibold text-white">Configuração NFS-e</h2>
           <p className="text-sm text-zinc-500 font-mono">{configCnpj}</p>
 

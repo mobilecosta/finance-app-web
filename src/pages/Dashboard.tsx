@@ -16,7 +16,7 @@ const COLORS = ['#ffffff', '#a1a1aa', '#52525b', '#3f3f46', '#27272a', '#18181b'
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload) return null;
   return (
-    <div className="bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-sm shadow-xl">
+    <div className="bg-zinc-800/95 border border-zinc-700 rounded-lg px-3 py-2 text-sm shadow-xl backdrop-blur-sm">
       <p className="text-zinc-400 mb-1">{label}</p>
       {payload.map((entry: any, i: number) => (
         <p key={i} style={{ color: entry.color }} className="font-medium">
@@ -52,8 +52,11 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader className="w-8 h-8 text-zinc-400 animate-spin" />
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="text-center">
+          <Loader className="w-10 h-10 text-zinc-400 animate-spin mx-auto mb-3" />
+          <p className="text-zinc-500 text-sm">Carregando métricas...</p>
+        </div>
       </div>
     );
   }
@@ -71,22 +74,22 @@ export default function Dashboard() {
 
   if (!metrics) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-zinc-500 gap-3">
-        <Wallet className="w-12 h-12 text-zinc-700" />
+      <div className="flex flex-col items-center justify-center h-[60vh] text-zinc-500 gap-3">
+        <Wallet className="w-16 h-16 text-zinc-700" />
         <p className="text-sm">Nenhum dado disponível</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-scale-in">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-white mb-1">Dashboard</h1>
           <p className="text-zinc-500">Visão geral de suas finanças</p>
         </div>
-        <div className="flex gap-1 bg-zinc-800/50 rounded-lg p-1">
+        <div className="flex gap-1 bg-zinc-800/50 rounded-lg p-1 self-start">
           {PERIODS.map(({ key, label }) => (
             <button
               key={key}
@@ -105,7 +108,7 @@ export default function Dashboard() {
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="card">
+        <div className="card hover:border-zinc-700 transition-all duration-200">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-zinc-500 text-xs mb-1 uppercase tracking-wider font-medium">Saldo Total</p>
@@ -119,7 +122,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="card">
+        <div className="card hover:border-emerald-700/50 transition-all duration-200">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-zinc-500 text-xs mb-1 uppercase tracking-wider font-medium">Receitas</p>
@@ -133,7 +136,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="card">
+        <div className="card hover:border-red-700/50 transition-all duration-200">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-zinc-500 text-xs mb-1 uppercase tracking-wider font-medium">Despesas</p>
@@ -147,7 +150,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="card">
+        <div className="card hover:border-zinc-700 transition-all duration-200">
           <div className="flex items-start justify-between">
             <div>
               <p className="text-zinc-500 text-xs mb-1 uppercase tracking-wider font-medium">Transações</p>
@@ -166,15 +169,13 @@ export default function Dashboard() {
           <h2 className="text-lg font-semibold text-white mb-4">Receitas vs Despesas</h2>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={metrics.monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" strokeOpacity={0.5} />
               <XAxis dataKey="month" stroke="#52525b" tick={{ fontSize: 12 }} />
               <YAxis stroke="#52525b" tick={{ fontSize: 12 }} />
-              <Tooltip content={<ChartTooltip />} />
-              <Legend
-                wrapperStyle={{ fontSize: 12, color: '#a1a1aa' }}
-              />
-              <Bar dataKey="income" fill="#34d399" name="Receitas" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="expense" fill="#f87171" name="Despesas" radius={[4, 4, 0, 0]} />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: '#27272a', fillOpacity: 0.3 }} />
+              <Legend wrapperStyle={{ fontSize: 12, color: '#a1a1aa' }} />
+              <Bar dataKey="income" fill="#34d399" name="Receitas" radius={[4, 4, 0, 0]} maxBarSize={40} />
+              <Bar dataKey="expense" fill="#f87171" name="Despesas" radius={[4, 4, 0, 0]} maxBarSize={40} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -205,7 +206,9 @@ export default function Dashboard() {
 
       {/* Recent Transactions */}
       <div className="card">
-        <h2 className="text-lg font-semibold text-white mb-4">Transações Recentes</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-white">Transações Recentes</h2>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -217,22 +220,28 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {metrics.recentTransactions.map((transaction) => (
-                <tr key={transaction.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/50 transition-colors">
-                  <td className="py-3 px-4 text-zinc-100 text-sm">{transaction.description || 'Sem descrição'}</td>
-                  <td className="py-3 px-4 text-zinc-400 text-sm">
-                    {transaction.type === 'income' ? 'Receita' : 'Despesa'}
-                  </td>
-                  <td className="py-3 px-4 text-zinc-500 text-sm">
-                    {new Date(transaction.date).toLocaleDateString('pt-BR')}
-                  </td>
-                  <td className={`py-3 px-4 text-right font-medium text-sm ${
-                    transaction.type === 'income' ? 'text-emerald-400' : 'text-red-400'
-                  }`}>
-                    {transaction.type === 'income' ? '+' : '-'} R$ {transaction.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                  </td>
+              {metrics.recentTransactions.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="text-center py-8 text-zinc-500 text-sm">Nenhuma transação recente</td>
                 </tr>
-              ))}
+              ) : (
+                metrics.recentTransactions.map((transaction) => (
+                  <tr key={transaction.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
+                    <td className="py-3 px-4 text-zinc-100 text-sm">{transaction.description || 'Sem descrição'}</td>
+                    <td className="py-3 px-4 text-zinc-400 text-sm">
+                      {transaction.type === 'income' ? 'Receita' : 'Despesa'}
+                    </td>
+                    <td className="py-3 px-4 text-zinc-500 text-sm">
+                      {new Date(transaction.date).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td className={`py-3 px-4 text-right font-medium text-sm ${
+                      transaction.type === 'income' ? 'text-emerald-400' : 'text-red-400'
+                    }`}>
+                      {transaction.type === 'income' ? '+' : '-'} R$ {transaction.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
