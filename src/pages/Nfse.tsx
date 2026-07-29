@@ -419,7 +419,7 @@ export default function Nfse() {
                       <p className="text-sm text-red-400/80 mt-1 break-words">{consultError.message}</p>
                     </div>
                   </div>
-                  {consultError.responseData && (
+                  {!!consultError.responseData && (
                     <details className="group">
                       <summary className="text-xs text-red-400/60 hover:text-red-300 cursor-pointer select-none">
                         Detalhes da resposta
