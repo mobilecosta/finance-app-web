@@ -1,0 +1,412 @@
+import { useEffect, useState } from 'react';
+import { Loader, AlertCircle, CheckCircle, Plus, Trash2, Edit2, Search, FileText, X } from 'lucide-react';
+import PageHeader from '../components/PageHeader';
+import { empresaAPI, extractError, type Empresa, type EmpresaConfigNfse } from '../services/nfse-api';
+
+type Tab = 'lista' | 'cadastrar' | 'config';
+
+function EmpresaCard({ empresa, onEdit, onDelete, onConfig }: {
+  empresa: Empresa;
+  onEdit: (e: Empresa) => void;
+  onDelete: (c: string) => void;
+  onConfig: (c: string) => void;
+}) {
+  return (
+    <div className="card-hover">
+      <div className="flex items-start justify-between">
+        <div className="space-y-1 flex-1 min-w-0">
+          <h3 className="font-medium text-zinc-100 truncate">{empresa.nome_razao_social}</h3>
+          <p className="text-xs text-zinc-500 font-mono">{empresa.cpf_cnpj}</p>
+          {empresa.nome_fantasia && <p className="text-xs text-zinc-500">{empresa.nome_fantasia}</p>}
+          <p className="text-xs text-zinc-500">{empresa.email}</p>
+          <p className="text-xs text-zinc-500">
+            {empresa.endereco.cidade}/{empresa.endereco.uf}
+          </p>
+        </div>
+        <div className="flex gap-1 flex-shrink-0">
+          <button onClick={() => onConfig(empresa.cpf_cnpj)} className="p-2.5 hover:bg-zinc-800 active:bg-zinc-700 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center" title="Configurar NFS-e" aria-label="Configurar NFS-e">
+            <FileText className="w-4 h-4 text-blue-400" />
+          </button>
+          <button onClick={() => onEdit(empresa)} className="p-2.5 hover:bg-zinc-800 active:bg-zinc-700 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center" title="Editar" aria-label="Editar">
+            <Edit2 className="w-4 h-4 text-zinc-400" />
+          </button>
+          <button onClick={() => onDelete(empresa.cpf_cnpj)} className="p-2.5 hover:bg-zinc-800 active:bg-zinc-700 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center" title="Excluir" aria-label="Excluir">
+            <Trash2 className="w-4 h-4 text-red-400" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const emptyForm: Empresa = {
+  cpf_cnpj: '',
+  nome_razao_social: '',
+  nome_fantasia: '',
+  inscricao_estadual: '',
+  inscricao_municipal: '',
+  fone: '',
+  email: '',
+  endereco: {
+    logradouro: '',
+    numero: '',
+    complemento: '',
+    bairro: '',
+    codigo_municipio: '',
+    cidade: '',
+    uf: '',
+    cep: '',
+    codigo_pais: '1058',
+    pais: 'Brasil',
+  },
+};
+
+const emptyConfigNfse: EmpresaConfigNfse = {
+  regTrib: { opSimpNac: 1, regApTribSN: 0, regEspTrib: 0 },
+  rps: { lote: 1, serie: 'S', numero: 1 },
+  incentivo_fiscal: false,
+  ambiente: 'homologacao',
+};
+
+export default function Empresas() {
+  const [activeTab, setActiveTab] = useState<Tab>('lista');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [filterCnpj, setFilterCnpj] = useState('');
+
+  const [form, setForm] = useState<Empresa>(emptyForm);
+  const [editMode, setEditMode] = useState(false);
+
+  const [configCnpj, setConfigCnpj] = useState('');
+  const [config, setConfig] = useState<EmpresaConfigNfse>(emptyConfigNfse);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  function clearMessages() { setError(''); setSuccess(''); }
+
+  async function loadEmpresas() {
+    setLoading(true); clearMessages();
+    try {
+      const res = await empresaAPI.listar(filterCnpj ? { cpf_cnpj: filterCnpj } : undefined);
+      setEmpresas(res.data ?? []);
+    } catch (e) {
+      setError(extractError(e));
+    } finally { setLoading(false); }
+  }
+
+  useEffect(() => { loadEmpresas(); }, []);
+
+  async function handleCadastrar() {
+    if (!form.cpf_cnpj || !form.nome_razao_social || !form.email) {
+      setError('CPF/CNPJ, Razão Social e Email são obrigatórios'); return;
+    }
+    setLoading(true); clearMessages();
+    try {
+      if (editMode) {
+        await empresaAPI.alterar(form.cpf_cnpj, form);
+        setSuccess('Empresa alterada com sucesso');
+      } else {
+        await empresaAPI.cadastrar(form);
+        setSuccess('Empresa cadastrada com sucesso');
+      }
+      setForm(emptyForm);
+      setEditMode(false);
+      setActiveTab('lista');
+      loadEmpresas();
+    } catch (e) {
+      setError(extractError(e));
+    } finally { setLoading(false); }
+  }
+
+  async function handleDeletar(cpfCnpj: string) {
+    setLoading(true); clearMessages();
+    try {
+      await empresaAPI.deletar(cpfCnpj);
+      setSuccess('Empresa deletada');
+      setDeleteConfirm(null);
+      loadEmpresas();
+    } catch (e) {
+      setError(extractError(e));
+      setDeleteConfirm(null);
+    } finally { setLoading(false); }
+  }
+
+  function handleEdit(empresa: Empresa) {
+    setForm(empresa);
+    setEditMode(true);
+    setActiveTab('cadastrar');
+  }
+
+  async function handleLoadConfig(cpfCnpj: string) {
+    setLoading(true); clearMessages(); setConfigCnpj(cpfCnpj);
+    try {
+      const res = await empresaAPI.consultarConfigNfse(cpfCnpj);
+      setConfig(res);
+      setActiveTab('config');
+    } catch (e) {
+      setError(extractError(e));
+    } finally { setLoading(false); }
+  }
+
+  async function handleSaveConfig() {
+    if (!configCnpj) return;
+    setLoading(true); clearMessages();
+    try {
+      await empresaAPI.alterarConfigNfse(configCnpj, config);
+      setSuccess('Configuração NFS-e salva');
+    } catch (e) {
+      setError(extractError(e));
+    } finally { setLoading(false); }
+  }
+
+  function openNewForm() {
+    setForm(emptyForm);
+    setEditMode(false);
+    setActiveTab('cadastrar');
+  }
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Empresas"
+        subtitle="Gerencie empresas e configurações na ACBr API"
+        actions={
+          activeTab === 'lista' ? (
+            <button className="btn-primary" onClick={openNewForm}>
+              <Plus className="w-4 h-4" /> Nova Empresa
+            </button>
+          ) : undefined
+        }
+      />
+
+      {/* Tabs */}
+      <div className="tab-scroll">
+        {(['lista', 'cadastrar', 'config'] as Tab[]).map(tab => (
+          <button
+            key={tab}
+            onClick={() => { setActiveTab(tab); clearMessages(); }}
+            className={`px-4 py-2.5 sm:py-1.5 rounded-lg text-sm font-medium transition-all duration-200 min-h-[44px] sm:min-h-0 ${
+              activeTab === tab ? 'bg-white text-black shadow-sm' : 'text-zinc-400 hover:text-white'
+            }`}
+          >
+            {tab === 'lista' ? 'Lista' : tab === 'cadastrar' ? (editMode ? 'Editar' : 'Cadastrar') : 'Config NFS-e'}
+          </button>
+        ))}
+      </div>
+
+      {/* Messages */}
+      {error && (
+        <div className="flex items-center gap-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-sm text-red-400">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />{error}
+        </div>
+      )}
+      {success && (
+        <div className="flex items-center gap-2 p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-sm text-emerald-400">
+          <CheckCircle className="w-4 h-4 flex-shrink-0" />{success}
+        </div>
+      )}
+
+      {loading && (
+        <div className="flex justify-center p-8"><Loader className="w-6 h-6 animate-spin text-zinc-400" /></div>
+      )}
+
+      {!loading && activeTab === 'lista' && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row gap-2">
+            <input className="input sm:max-w-xs font-mono" placeholder="Filtrar por CPF/CNPJ"
+              value={filterCnpj} onChange={e => setFilterCnpj(e.target.value)} inputMode="numeric" />
+            <button className="btn-primary sm:w-auto" onClick={loadEmpresas} aria-label="Buscar">
+              <Search className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="space-y-2">
+            {empresas.map(emp => (
+              <EmpresaCard key={emp.cpf_cnpj} empresa={emp} onEdit={handleEdit} onDelete={setDeleteConfirm} onConfig={handleLoadConfig} />
+            ))}
+            {empresas.length === 0 && <p className="text-sm text-zinc-500 text-center py-8">Nenhuma empresa encontrada</p>}
+          </div>
+        </div>
+      )}
+
+      {!loading && activeTab === 'cadastrar' && (
+        <div className="card max-w-2xl space-y-4">
+          <h2 className="text-base sm:text-lg font-semibold text-white">{editMode ? 'Editar Empresa' : 'Cadastrar Empresa'}</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="col-span-1 sm:col-span-2">
+              <label className="block text-sm font-medium text-zinc-400 mb-2">CPF/CNPJ *</label>
+              <input className="input font-mono" placeholder="00000000000000" value={form.cpf_cnpj} onChange={e => setForm(f => ({ ...f, cpf_cnpj: e.target.value }))} disabled={editMode} inputMode="numeric" />
+            </div>
+            <div className="col-span-1 sm:col-span-2">
+              <label className="block text-sm font-medium text-zinc-400 mb-2">Razão Social *</label>
+              <input className="input text-sm" placeholder="Razão social" value={form.nome_razao_social} onChange={e => setForm(f => ({ ...f, nome_razao_social: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">Nome Fantasia</label>
+              <input className="input text-sm" placeholder="Nome fantasia" value={form.nome_fantasia ?? ''} onChange={e => setForm(f => ({ ...f, nome_fantasia: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">Email *</label>
+              <input className="input text-sm" type="email" placeholder="email@empresa.com" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">Inscrição Municipal</label>
+              <input className="input font-mono text-sm" placeholder="Inscrição municipal" value={form.inscricao_municipal ?? ''} onChange={e => setForm(f => ({ ...f, inscricao_municipal: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">Inscrição Estadual</label>
+              <input className="input font-mono text-sm" placeholder="Inscrição estadual" value={form.inscricao_estadual ?? ''} onChange={e => setForm(f => ({ ...f, inscricao_estadual: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">Telefone</label>
+              <input className="input text-sm" placeholder="(11) 99999-9999" value={form.fone ?? ''} onChange={e => setForm(f => ({ ...f, fone: e.target.value }))} />
+            </div>
+          </div>
+
+          <h3 className="text-sm font-semibold text-zinc-500 uppercase tracking-wider pt-2">Endereço</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="col-span-1 sm:col-span-2">
+              <label className="block text-sm font-medium text-zinc-400 mb-2">Logradouro</label>
+              <input className="input text-sm" placeholder="Rua, Av..." value={form.endereco.logradouro} onChange={e => setForm(f => ({ ...f, endereco: { ...f.endereco, logradouro: e.target.value } }))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">Número</label>
+              <input className="input text-sm" placeholder="123" value={form.endereco.numero ?? ''} onChange={e => setForm(f => ({ ...f, endereco: { ...f.endereco, numero: e.target.value } }))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">Complemento</label>
+              <input className="input text-sm" placeholder="Sala 1" value={form.endereco.complemento ?? ''} onChange={e => setForm(f => ({ ...f, endereco: { ...f.endereco, complemento: e.target.value } }))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">Bairro</label>
+              <input className="input text-sm" placeholder="Centro" value={form.endereco.bairro} onChange={e => setForm(f => ({ ...f, endereco: { ...f.endereco, bairro: e.target.value } }))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">CEP</label>
+              <input className="input font-mono text-sm" placeholder="01001000" value={form.endereco.cep} onChange={e => setForm(f => ({ ...f, endereco: { ...f.endereco, cep: e.target.value } }))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">Código Município (IBGE)</label>
+              <input className="input font-mono text-sm" placeholder="3550308" value={form.endereco.codigo_municipio} onChange={e => setForm(f => ({ ...f, endereco: { ...f.endereco, codigo_municipio: e.target.value } }))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">Cidade</label>
+              <input className="input text-sm" placeholder="São Paulo" value={form.endereco.cidade} onChange={e => setForm(f => ({ ...f, endereco: { ...f.endereco, cidade: e.target.value } }))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">UF</label>
+              <input className="input font-mono text-sm" placeholder="SP" maxLength={2} value={form.endereco.uf} onChange={e => setForm(f => ({ ...f, endereco: { ...f.endereco, uf: e.target.value.toUpperCase() } }))} />
+            </div>
+          </div>
+
+          <div className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
+            <button className="btn-secondary sm:w-auto" onClick={() => setActiveTab('lista')}>Cancelar</button>
+            <button className="btn-primary sm:w-auto" onClick={handleCadastrar}>
+              {editMode ? 'Salvar alterações' : 'Cadastrar empresa'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!loading && activeTab === 'config' && configCnpj && (
+        <div className="card max-w-lg space-y-4 animate-scale-in">
+          <h2 className="text-base sm:text-lg font-semibold text-white">Configuração NFS-e</h2>
+          <p className="text-sm text-zinc-500 font-mono break-all">{configCnpj}</p>
+
+          <div>
+            <label className="block text-sm font-medium text-zinc-400 mb-2">Ambiente</label>
+            <div className="flex gap-2">
+              {(['homologacao', 'producao'] as const).map(a => (
+                <button key={a} onClick={() => setConfig(c => ({ ...c, ambiente: a }))}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                    config.ambiente === a ? 'bg-white text-black shadow-sm' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                  }`}
+                >{a === 'homologacao' ? 'Homologação' : 'Produção'}</button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">Lote RPS</label>
+              <input className="input text-sm" type="number" inputMode="numeric" value={config.rps.lote} onChange={e => setConfig(c => ({ ...c, rps: { ...c.rps, lote: parseInt(e.target.value) || 0 } }))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">Série RPS</label>
+              <input className="input text-sm" value={config.rps.serie} onChange={e => setConfig(c => ({ ...c, rps: { ...c.rps, serie: e.target.value } }))} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-zinc-400 mb-2">Número RPS</label>
+              <input className="input text-sm" type="number" inputMode="numeric" value={config.rps.numero} onChange={e => setConfig(c => ({ ...c, rps: { ...c.rps, numero: parseInt(e.target.value) || 0 } }))} />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-zinc-400 mb-2">Regime Tributário</label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs text-zinc-500 mb-1">Simples Nacional</label>
+                <select className="input text-sm" value={config.regTrib.opSimpNac ?? 1} onChange={e => setConfig(c => ({ ...c, regTrib: { ...c.regTrib, opSimpNac: parseInt(e.target.value) } }))}>
+                  <option value={1}>Sim</option>
+                  <option value={2}>Não</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-zinc-500 mb-1">Regime Apuração</label>
+                <input className="input text-sm" type="number" value={config.regTrib.regApTribSN ?? 0} onChange={e => setConfig(c => ({ ...c, regTrib: { ...c.regTrib, regApTribSN: parseInt(e.target.value) || 0 } }))} />
+              </div>
+              <div>
+                <label className="block text-xs text-zinc-500 mb-1">Regime Especial</label>
+                <input className="input text-sm" type="number" value={config.regTrib.regEspTrib ?? 0} onChange={e => setConfig(c => ({ ...c, regTrib: { ...c.regTrib, regEspTrib: parseInt(e.target.value) || 0 } }))} />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-zinc-400 mb-2">Incentivo Fiscal</label>
+            <div className="flex gap-2">
+              {[true, false].map(v => (
+                <button key={String(v)} onClick={() => setConfig(c => ({ ...c, incentivo_fiscal: v }))}
+                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                    config.incentivo_fiscal === v ? 'bg-white text-black shadow-sm' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                  }`}
+                >{v ? 'Sim' : 'Não'}</button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
+            <button className="btn-secondary" onClick={() => setActiveTab('lista')}>Voltar</button>
+            <button className="btn-primary" onClick={handleSaveConfig}>Salvar configuração</button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm !== null && (
+        <div className="modal-overlay" onClick={() => setDeleteConfirm(null)}>
+          <div className="modal-content max-w-sm" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-lg font-semibold text-white">Confirmar exclusão</h2>
+              <button onClick={() => setDeleteConfirm(null)} className="p-1 hover:bg-zinc-800 rounded-lg transition-colors">
+                <X className="w-5 h-5 text-zinc-500" />
+              </button>
+            </div>
+            <p className="text-sm text-zinc-400 mb-6">
+              Tem certeza que deseja excluir a empresa <strong className="text-zinc-300">{deleteConfirm}</strong>? Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex gap-2">
+              <button onClick={() => handleDeletar(deleteConfirm)} className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium text-sm">
+                Excluir
+              </button>
+              <button onClick={() => setDeleteConfirm(null)} className="flex-1 btn-secondary">
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
