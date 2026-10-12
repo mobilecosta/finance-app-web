@@ -2,7 +2,11 @@
  *modos de leitura:
  *  - API: Sheets API v4 (spreadsheets.values.get) com API key informada na UI.
  *  - CSV: upload de arquivos .csv exportados de cada aba (File > Download > CSV).
+ *  - Backend (migração direta): GET /migration/sheet-preview do finance-backend,
+ *    que lê a planilha direto do Google (modelo dashboard_totvs, sem API key).
  */
+
+import api from './api';
 
 export interface ColumnMapping {
   date: string;
@@ -29,6 +33,7 @@ export interface RowIssue {
   rowIndex: number;
   field: string;
   message: string;
+  level?: string;
 }
 
 export interface TabPreview {
@@ -295,6 +300,43 @@ export function normalizeTab(
   }
 
   return { tab, headers, totalRows: dataRow, validRows, totalIncome, totalExpense, rows, issues };
+}
+
+/* ---------------- leitura: backend (migração direta) ---------------- */
+
+/** Chama GET /migration/sheet-preview do finance-backend (requer login). */
+export async function fetchTabViaBackend(
+  tab: string,
+  spreadsheetId: string,
+  mapping: ColumnMapping,
+): Promise<TabPreview> {
+  const params = new URLSearchParams({ tab });
+  if (spreadsheetId.trim()) params.set('spreadsheetId', spreadsheetId.trim());
+  params.set('typeMode', mapping.typeMode);
+  const res = await api.get(`/migration/sheet-preview?${params.toString()}`);
+  const d = res.data ?? {};
+  const rows: NormalizedRow[] = Array.isArray(d.rows)
+    ? d.rows.map((r: any, i: number) => ({
+        rowIndex: r.rowIndex ?? i + 1,
+        date: r.date ?? '',
+        description: r.description ?? '',
+        type: r.type ?? '',
+        amount: typeof r.amount === 'number' ? r.amount : null,
+        category: r.category ?? '',
+        status: r.status ?? '',
+        raw: {},
+      }))
+    : [];
+  return {
+    tab: d.tab ?? tab,
+    headers: Array.isArray(d.headers) ? d.headers : [],
+    totalRows: d.totalRows ?? rows.length,
+    validRows: d.validRows ?? 0,
+    totalIncome: d.totalIncome ?? 0,
+    totalExpense: d.totalExpense ?? 0,
+    rows,
+    issues: Array.isArray(d.issues) ? d.issues : [],
+  };
 }
 
 /* ---------------- exportação ---------------- */

@@ -7,6 +7,7 @@ import {
   DEFAULT_TABS, DEFAULT_SPREADSHEET_ID, DEFAULT_MAPPING,
   type ColumnMapping, type TabPreview,
   fetchTabViaApi, parseCsv, readFileAsText, normalizeTab,
+  fetchTabViaBackend,
   guessMapping, buildMigrationPayload, downloadJson,
 } from '../services/sheetMigration';
 
@@ -21,7 +22,7 @@ const SAMPLE: Record<string, string> = {
 98/13/2026;Linha com data inválida;100,00;Receita;Outros;completed`,
 };
 
-type Mode = 'api' | 'csv';
+type Mode = 'api' | 'csv' | 'backend';
 
 function parseTabsList(text: string): string[] {
   return text.split(/[,\n]/).map((t) => t.trim()).filter(Boolean);
@@ -80,6 +81,10 @@ export default function Migracoes() {
       const out: TabPreview[] = [];
       for (const tab of list) {
         try {
+          if (mode === 'backend') {
+            out.push(await fetchTabViaBackend(tab, spreadsheetId.trim(), activeMapping));
+            continue;
+          }
           let matrix: string[][];
           if (mode === 'api') {
             matrix = await fetchTabViaApi(spreadsheetId.trim(), tab, apiKey.trim());
@@ -194,6 +199,13 @@ export default function Migracoes() {
             >
               <Upload className="w-4 h-4" /> Upload CSV
             </button>
+            <button
+              onClick={() => setMode('backend')}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${mode === 'backend' ? 'bg-white text-black' : 'bg-zinc-950 text-zinc-400 border border-zinc-800'}`}
+              title="Lê a planilha direto do Google via finance-backend (sem API key)"
+            >
+              <Database className="w-4 h-4" /> Migração direta
+            </button>
           </div>
           {mode === 'api' && (
             <input
@@ -227,7 +239,13 @@ export default function Migracoes() {
 
         <h2 className="text-sm font-semibold text-white uppercase tracking-widest pt-2">Mapeamento de colunas</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {(
+          {mode === 'backend' ? (
+            <p className="text-xs text-zinc-500 sm:col-span-2 lg:col-span-3">
+              Na migração direta a detecção de colunas é automática no servidor
+              (DIA + VLR DESPESA/RECEITA + competência da aba). Abaixo, só o modo
+              de interpretação do tipo é enviado.
+            </p>
+          ) : (
             [
               ['date', 'Data'],
               ['description', 'Descrição'],
