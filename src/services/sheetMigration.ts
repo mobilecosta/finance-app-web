@@ -86,28 +86,66 @@ function norm(s: string): string {
     .trim();
 }
 
-function findHeader(headers: string[], wanted: string): number {
-  if (!wanted) return -1;
-  const w = norm(wanted);
-  return headers.findIndex((h) => norm(h) === w);
+type HeaderField = 'date' | 'day' | 'description' | 'amount' | 'amountExpense' | 'amountIncome' | 'type' | 'category' | 'status';
+
+const HEADER_RULES: Array<{ field: HeaderField; test: (h: string) => boolean }> = [
+  { field: 'date', test: (h) => ['data', 'dt', 'vencimento', 'pagamento', 'competencia'].includes(h) },
+  { field: 'day', test: (h) => h === 'dia' },
+  {
+    field: 'description',
+    test: (h) => ['descricao', 'historico', 'detalhe', 'lancamento', 'nome'].includes(h) || h.includes('descricao da despesa'),
+  },
+  { field: 'amount', test: (h) => ['valor', 'total', 'amount', 'quantia'].includes(h) },
+  {
+    field: 'amountExpense',
+    test: (h) => h.includes('vlr despesa') || h.includes('valor despesa') || h === 'despesa',
+  },
+  {
+    field: 'amountIncome',
+    test: (h) => h.includes('vlr receita') || h.includes('valor receita') || h === 'receita',
+  },
+  { field: 'type', test: (h) => ['tipo', 'operacao', 'natureza'].includes(h) },
+  { field: 'category', test: (h) => ['categoria', 'grupo', 'classe', 'origem'].includes(h) },
+  { field: 'status', test: (h) => ['status', 'situacao'].includes(h) },
+];
+
+function autoDetect(headers: string[]): Partial<Record<HeaderField, number>> {
+  const found: Partial<Record<HeaderField, number>> = {};
+  headers.forEach((header) => {
+    const h = norm(header);
+    for (const rule of HEADER_RULES) {
+      if (found[rule.field] === undefined && rule.test(h)) {
+        found[rule.field] = headers.indexOf(header);
+        break;
+      }
+    }
+  });
+  return found;
+}
+
+/** Extrai {mm, yyyy} de nomes de aba como "01/2026". */
+export function tabPeriod(tab: string): { mm: string; yyyy: string } | null {
+  const m = tab.trim().match(/^(\d{2})\/(\d{4})$/);
+  return m ? { mm: m[1], yyyy: m[2] } : null;
+}
+
+/** Linhas de totalização mensal (ex.: "TOTAIS DO MÊS") não migram. */
+export function isSummaryRow(description: string): boolean {
+  return /totais?\s+do\s+m[eê]s/i.test(description || '');
 }
 
 /** Preenche o mapeamento a partir dos cabeçalhos detectados (tentativa). */
 export function guessMapping(headers: string[]): ColumnMapping {
-  const pick = (cands: string[]): string => {
-    for (const c of cands) {
-      const i = headers.findIndex((h) => norm(h) === norm(c));
-      if (i >= 0) return headers[i];
-    }
-    return '';
-  };
+  const detected = autoDetect(headers);
+  const byIndex = (i: number | undefined): string =>
+    i === undefined ? '' : (headers[i] ?? '').trim();
   return {
-    date: pick(['data', 'dt', 'vencimento', 'pagamento', 'competencia']),
-    description: pick(['descricao', 'historico', 'detalhe', 'lancamento', 'nome']),
-    amount: pick(['valor', 'total', 'amount', 'quantia']),
-    type: pick(['tipo', 'operacao', 'receita/despesa', 'natureza']),
-    category: pick(['categoria', 'grupo', 'classe']),
-    status: pick(['status', 'situacao']),
+    date: byIndex(detected.date),
+    description: byIndex(detected.description),
+    amount: byIndex(detected.amount),
+    type: byIndex(detected.type),
+    category: byIndex(detected.category),
+    status: byIndex(detected.status),
     typeMode: 'signal',
   };
 }
@@ -220,6 +258,38 @@ function typeFromText(raw: string): 'income' | 'expense' | '' {
 
 /* ---------------- normalização ---------------- */
 
+function resolveIndex(
+  headers: string[],
+  detected: Partial<Record<HeaderField, number>>,
+  field: HeaderField,
+  override: string,
+): number | undefined {
+  if (override) {
+    const w = norm(override);
+    const i = headers.findIndex((h) => norm(h) === w);
+    if (i >= 0) return i;
+  }
+  return detected[field];
+}
+
+function resolveAll(
+  headers: string[],
+  mapping: ColumnMapping,
+): Record<HeaderField, number | undefined> {
+  const detected = autoDetect(headers);
+  return {
+    date: resolveIndex(headers, detected, 'date', mapping.date),
+    day: detected.day,
+    description: resolveIndex(headers, detected, 'description', mapping.description),
+    amount: resolveIndex(headers, detected, 'amount', mapping.amount),
+    amountExpense: detected.amountExpense,
+    amountIncome: detected.amountIncome,
+    type: resolveIndex(headers, detected, 'type', mapping.type),
+    category: resolveIndex(headers, detected, 'category', mapping.category),
+    status: resolveIndex(headers, detected, 'status', mapping.status),
+  };
+}
+
 export function normalizeTab(
   tab: string,
   matrix: string[][],
@@ -229,15 +299,10 @@ export function normalizeTab(
     return { tab, headers: [], totalRows: 0, validRows: 0, totalIncome: 0, totalExpense: 0, rows: [], issues: [] };
   }
   const headers = matrix[0].map((h) => (h || '').trim());
-  const idx = {
-    date: findHeader(headers, mapping.date),
-    description: findHeader(headers, mapping.description),
-    amount: findHeader(headers, mapping.amount),
-    type: findHeader(headers, mapping.type),
-    category: findHeader(headers, mapping.category),
-    status: findHeader(headers, mapping.status),
-  };
-  const cell = (row: string[], i: number): string => (i >= 0 && i < row.length ? (row[i] || '').trim() : '');
+  const period = tabPeriod(tab);
+  const idx = resolveAll(headers, mapping);
+  const cell = (row: string[], i: number | undefined): string =>
+    i === undefined || i >= row.length ? '' : (row[i] || '').trim();
 
   const rows: NormalizedRow[] = [];
   const issues: RowIssue[] = [];
@@ -249,6 +314,13 @@ export function normalizeTab(
   for (let r = 1; r < matrix.length; r++) {
     const record = matrix[r];
     if (record.every((c) => !(c || '').trim())) continue;
+    const description = cell(record, idx.description);
+    if (isSummaryRow(description)) continue;
+    const amountRaw = cell(record, idx.amount);
+    const expenseRaw = cell(record, idx.amountExpense);
+    const incomeRaw = cell(record, idx.amountIncome);
+    // Eco de saldo / linha sem conteúdo transacional.
+    if (!description && !amountRaw && !expenseRaw && !incomeRaw) continue;
     dataRow++;
 
     const raw: Record<string, string> = {};
@@ -256,16 +328,48 @@ export function normalizeTab(
       raw[h || `col${i + 1}`] = (record[i] || '').trim();
     });
 
-    const date = idx.date >= 0 ? parseDateToISO(cell(record, idx.date)) : '';
-    const description = idx.description >= 0 ? cell(record, idx.description) : '';
-    const amountRaw = idx.amount >= 0 ? cell(record, idx.amount) : '';
-    const amount = parseAmount(amountRaw);
+    // Valor: coluna única ou par despesa/receita.
+    let amount = parseAmount(amountRaw);
+    let pairType: NormalizedRow['type'] = '';
+    if (amount === null && (idx.amountExpense !== undefined || idx.amountIncome !== undefined)) {
+      const expense = parseAmount(expenseRaw);
+      const income = parseAmount(incomeRaw);
+      if (expense !== null && expense !== 0) {
+        amount = Math.abs(expense);
+        pairType = 'expense';
+      } else if (income !== null && income !== 0) {
+        amount = Math.abs(income);
+        pairType = 'income';
+      } else if (expense !== null || income !== null) {
+        amount = 0;
+      }
+    }
 
-    let type: NormalizedRow['type'] = '';
-    if (mapping.typeMode === 'fixed-income') type = 'income';
-    else if (mapping.typeMode === 'fixed-expense') type = 'expense';
-    else if (mapping.typeMode === 'signal' && amount !== null) type = amount < 0 ? 'expense' : 'income';
-    else if (idx.type >= 0) type = typeFromText(cell(record, idx.type));
+    // Data: coluna cheia ou DIA + competência MM/YYYY da aba.
+    const dateCell = cell(record, idx.date);
+    let date = parseDateToISO(dateCell);
+    let dateWarning = '';
+    if (!date && period) {
+      const dayRaw = cell(record, idx.day);
+      const day = parseInt(dayRaw, 10);
+      if (dayRaw && Number.isFinite(day) && day >= 1 && day <= 31) {
+        date = `${period.yyyy}-${period.mm}-${String(day).padStart(2, '0')}`;
+      } else {
+        date = `${period.yyyy}-${period.mm}-01`;
+        dateWarning =
+          dayRaw || dateCell
+            ? `Data "${dayRaw || dateCell}" inválida, assumido dia 01 (${period.mm}/${period.yyyy})`
+            : `Dia ausente, assumido dia 01 (${period.mm}/${period.yyyy})`;
+      }
+    }
+
+    let type: NormalizedRow['type'] = pairType;
+    if (!type) {
+      if (mapping.typeMode === 'fixed-income') type = 'income';
+      else if (mapping.typeMode === 'fixed-expense') type = 'expense';
+      else if (mapping.typeMode === 'signal' && amount !== null) type = amount < 0 ? 'expense' : 'income';
+      else type = typeFromText(cell(record, idx.type));
+    }
 
     const row: NormalizedRow = {
       rowIndex: dataRow,
@@ -273,8 +377,8 @@ export function normalizeTab(
       description,
       type,
       amount,
-      category: idx.category >= 0 ? cell(record, idx.category) : '',
-      status: idx.status >= 0 ? cell(record, idx.status) : '',
+      category: cell(record, idx.category),
+      status: cell(record, idx.status),
       raw,
     };
     rows.push(row);
@@ -283,9 +387,11 @@ export function normalizeTab(
     if (!date) {
       issues.push({ rowIndex: dataRow, field: 'date', message: 'Data ausente ou inválida' });
       ok = false;
+    } else if (dateWarning) {
+      issues.push({ rowIndex: dataRow, field: 'date', message: dateWarning, level: 'warning' });
     }
     if (amount === null) {
-      issues.push({ rowIndex: dataRow, field: 'amount', message: `Valor inválido: "${amountRaw}"` });
+      issues.push({ rowIndex: dataRow, field: 'amount', message: `Valor inválido: "${amountRaw || expenseRaw || incomeRaw}"` });
       ok = false;
     }
     if (!type) {
