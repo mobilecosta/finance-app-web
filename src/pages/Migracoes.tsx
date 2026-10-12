@@ -12,7 +12,7 @@ import {
 } from '../services/sheetMigration';
 
 const SAMPLE: Record<string, string> = {
-  '01/2026': `Data;Descrição;Valor;Tipo;Categoria;Status
+  '01-2026': `Data;Descrição;Valor;Tipo;Categoria;Status
 05/01/2026;Salário mensal;8500,00;Receita;Salário;completed
 10/01/2026;Aluguel apartamento;-2200,00;Despesa;Moradia;completed
 15/01/2026;Supermercado;-842,35;Despesa;Alimentação;completed`,
@@ -72,7 +72,7 @@ export default function Migracoes() {
     setSampleMode(false);
     try {
       const list = tabs;
-      if (list.length === 0) throw new Error('Informe ao menos uma aba (ex.: 01/2026).');
+      if (list.length === 0) throw new Error('Informe ao menos uma aba (ex.: 01-2026).');
       if (mode === 'api' && !apiKey.trim()) {
         throw new Error('Informe a API key do Google (ou troque para modo CSV).');
       }

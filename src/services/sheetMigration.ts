@@ -60,7 +60,7 @@ export interface MigrationItem {
 
 export const DEFAULT_TABS: string[] = Array.from({ length: 11 }, (_, i) => {
   const mm = String(i + 1).padStart(2, '0');
-  return `${mm}/2026`;
+  return `${mm}-2026`;
 });
 
 export const DEFAULT_SPREADSHEET_ID =
@@ -123,15 +123,20 @@ function autoDetect(headers: string[]): Partial<Record<HeaderField, number>> {
   return found;
 }
 
-/** Extrai {mm, yyyy} de nomes de aba como "01/2026". */
+/** Extrai {mm, yyyy} de nomes de aba como "01-2026" ou "01/2026". */
 export function tabPeriod(tab: string): { mm: string; yyyy: string } | null {
-  const m = tab.trim().match(/^(\d{2})\/(\d{4})$/);
+  const m = tab.trim().match(/^(\d{2})[-\/](\d{4})$/);
   return m ? { mm: m[1], yyyy: m[2] } : null;
 }
 
 /** Linhas de totalização mensal (ex.: "TOTAIS DO MÊS") não migram. */
 export function isSummaryRow(description: string): boolean {
   return /totais?\s+do\s+m[eê]s/i.test(description || '');
+}
+
+/** Saldo de abertura ("Saldo Anterior") não é transação — não migra. */
+export function isOpeningBalanceRow(description: string): boolean {
+  return /saldo\s+anterior/i.test((description || '').trim());
 }
 
 /** Preenche o mapeamento a partir dos cabeçalhos detectados (tentativa). */
@@ -316,6 +321,7 @@ export function normalizeTab(
     if (record.every((c) => !(c || '').trim())) continue;
     const description = cell(record, idx.description);
     if (isSummaryRow(description)) continue;
+    if (isOpeningBalanceRow(description)) continue;
     const amountRaw = cell(record, idx.amount);
     const expenseRaw = cell(record, idx.amountExpense);
     const incomeRaw = cell(record, idx.amountIncome);
