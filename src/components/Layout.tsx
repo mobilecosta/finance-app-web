@@ -4,6 +4,7 @@ import { useAuthStore } from '../store/authStore';
 import {
   BarChart3, CreditCard, Settings, LogOut,
   Menu, X, Wallet, Tag, TrendingUp, FileText, Building2, TestTube,
+  ArrowLeftRight, ChevronDown,
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -41,6 +42,13 @@ export default function Layout({ children }: LayoutProps) {
     { path: '/testes', label: 'Testes', icon: TestTube },
     { path: '/settings', label: 'Configurações', icon: Settings },
   ];
+
+  const migracaoItems = [
+    { path: '/migracoes/financeiro', label: 'Financeiro' },
+  ];
+
+  const [migracoesOpen, setMigracoesOpen] = useState(location.startsWith('/migracoes'));
+  const migracoesActive = location.startsWith('/migracoes');
 
   const handleLogout = async () => {
     await signout();
@@ -91,6 +99,43 @@ export default function Layout({ children }: LayoutProps) {
             {sidebarOpen && <span className="text-sm font-medium">{label}</span>}
           </Link>
         ))}
+
+        {/* Grupo Migrações */}
+        <button
+          onClick={() => setMigracoesOpen(!migracoesOpen)}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+            migracoesActive
+              ? 'bg-white text-black shadow-md'
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+          }`}
+        >
+          <ArrowLeftRight className={`w-5 h-5 flex-shrink-0 ${migracoesActive ? 'text-black' : ''}`} />
+          {sidebarOpen && (
+            <>
+              <span className="text-sm font-medium flex-1 text-left">Migrações</span>
+              <ChevronDown
+                className={`w-4 h-4 transition-transform duration-200 ${migracoesOpen ? 'rotate-180' : ''}`}
+              />
+            </>
+          )}
+        </button>
+        {migracoesOpen && sidebarOpen && (
+          <div className="ml-8 space-y-0.5 border-l border-zinc-800 pl-2">
+            {migracaoItems.map(({ path, label }) => (
+              <Link
+                key={path}
+                to={path}
+                className={`block px-3 py-2 rounded-lg text-sm transition-all duration-200 ${
+                  location === path
+                    ? 'text-white bg-zinc-800 font-medium'
+                    : 'text-zinc-500 hover:text-white hover:bg-zinc-800/60'
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
+          </div>
+        )}
       </nav>
 
       {/* User Info */}

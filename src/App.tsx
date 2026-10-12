@@ -1,4 +1,4 @@
-import { Route, Switch } from 'wouter';
+import { Route, Switch, Redirect } from 'wouter';
 import { useEffect } from 'react';
 import { useAuthStore } from './store/authStore';
 import Layout from './components/Layout';
@@ -13,6 +13,7 @@ import Empresas from './pages/Empresas';
 import Nfse from './pages/Nfse';
 import Settings from './pages/Settings';
 import Testes from './pages/Testes';
+import Migracoes from './pages/Migracoes';
 
 function AppRoutes() {
   const { token } = useAuthStore();
@@ -93,6 +94,18 @@ function AppRoutes() {
         </ProtectedRoute>
       </Route>
       
+      <Route path="/migracoes">
+        <Redirect to="/migracoes/financeiro" />
+      </Route>
+
+      <Route path="/migracoes/financeiro">
+        <ProtectedRoute>
+          <Layout>
+            <Migracoes />
+          </Layout>
+        </ProtectedRoute>
+      </Route>
+
       <Route path="/">
         {token ? (
           <ProtectedRoute>
